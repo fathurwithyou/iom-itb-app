@@ -1,47 +1,69 @@
 <template>
   <div class="bg-colorSecond pt-[10px] pb-[32px] px-[18px] md:px-[70px]">
-    <!-- Merchandise Details -->
-    <div class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-lg shadow p-6">
-      <div class="flex flex-col md:flex-row">
-        <div class="flex-shrink-0">
-          <img
-            v-if="currentMerchandise?.image"
-            :src="currentMerchandise.image"
-            :alt="currentMerchandise.name"
-            class="rounded-lg w-full md:w-[300px] h-auto"
-          />
-          <img
-            v-else
-            :src="require('@/assets/image/default.png')"
-            alt="No Image"
-            class="rounded-lg w-full md:w-[300px] h-auto"
-          />
-        </div>
-        <div class="flex-1 mt-4 md:mt-0 md:ml-6">
-          <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ currentMerchandise.name }}</h1>
-          <p class="text-gray-700 mb-4">{{ currentMerchandise.description }}</p>
-          <p class="text-2xl font-bold text-main mb-4">{{ formatPrice(currentMerchandise.price) }}</p>
-          <p class="text-gray-500 mb-6">Stok: {{ currentMerchandise.stock }}</p>
+    <div
+      v-if="isLoading"
+      class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-lg shadow p-6 text-center text-gray-600"
+    >
+      Memuat detail produk...
+    </div>
 
-          <!-- Quantity Input -->
-          <div class="mb-4">
-            <label for="quantity" class="block text-sm font-medium text-gray-700">Jumlah Produk</label>
-            <input
-              type="number"
-              id="quantity"
-              v-model.number="quantity"
-              min="1"
-              :max="currentMerchandise.stock"
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-main focus:border-main sm:text-sm"
+    <div
+      v-else-if="merchandiseError"
+      class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-lg shadow p-6 text-center"
+    >
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Produk tidak tersedia</h1>
+      <p class="text-gray-600 mb-6">{{ merchandiseError }}</p>
+      <a
+        href="/merchandise"
+        class="inline-flex items-center px-5 py-2 text-white bg-main rounded-lg hover:bg-blue-800"
+      >
+        Kembali ke daftar merchandise
+      </a>
+    </div>
+
+    <template v-else>
+      <!-- Merchandise Details -->
+      <div class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-lg shadow p-6">
+        <div class="flex flex-col md:flex-row">
+          <div class="flex-shrink-0">
+            <img
+              v-if="currentMerchandise?.image"
+              :src="currentMerchandise.image"
+              :alt="currentMerchandise.name"
+              class="rounded-lg w-full md:w-[300px] h-auto"
             />
+            <img
+              v-else
+              :src="require('@/assets/image/default.png')"
+              alt="No Image"
+              class="rounded-lg w-full md:w-[300px] h-auto"
+            />
+          </div>
+          <div class="flex-1 mt-4 md:mt-0 md:ml-6">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ currentMerchandise.name }}</h1>
+            <p class="text-gray-700 mb-4">{{ currentMerchandise.description }}</p>
+            <p class="text-2xl font-bold text-main mb-4">{{ formatPrice(currentMerchandise.price) }}</p>
+            <p class="text-gray-500 mb-6">Stok: {{ currentMerchandise.stock }}</p>
+
+            <!-- Quantity Input -->
+            <div class="mb-4">
+              <label for="quantity" class="block text-sm font-medium text-gray-700">Jumlah Produk</label>
+              <input
+                type="number"
+                id="quantity"
+                v-model.number="quantity"
+                min="1"
+                :max="currentMerchandise.stock"
+                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-main focus:border-main sm:text-sm"
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- User Information Form -->
-    <div class="mt-6 bg-white border border-gray-200 rounded-lg shadow p-6 max-w-3xl mx-auto">
-      <h2 class="text-xl font-bold mb-4">Informasi Pembeli</h2>
+      <!-- User Information Form -->
+      <div class="mt-6 bg-white border border-gray-200 rounded-lg shadow p-6 max-w-3xl mx-auto">
+        <h2 class="text-xl font-bold mb-4">Informasi Pembeli</h2>
 
       <div class="mb-4">
         <label for="name" class="block text-sm font-medium text-gray-700">Nama</label>
@@ -120,17 +142,18 @@
         </label>
       </div>
 
-      <!-- Submit Button -->
-      <div class="mt-6">
-        <button
-          type="button"
-          @click="submitCheckout"
-          class="inline-flex items-center px-5 py-2 text-white bg-main rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300"
-        >
-        Pesan Sekarang
-        </button>
+        <!-- Submit Button -->
+        <div class="mt-6">
+          <button
+            type="button"
+            @click="submitCheckout"
+            class="inline-flex items-center px-5 py-2 text-white bg-main rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300"
+          >
+          Pesan Sekarang
+          </button>
+        </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -142,6 +165,8 @@ import Swal from 'sweetalert2';
 export default {
   data() {
     return {
+      isLoading: true,
+      merchandiseError: "",
       quantity: 1,
       userInfo: {
         name: "",
@@ -167,12 +192,24 @@ export default {
   },
   methods: {
     async getData() {
+      this.isLoading = true;
+      this.merchandiseError = "";
+
       try {
         await this.$store.dispatch(GET_MERCHANDISE_DETAIL, {
           id: this.merchandiseId,
         });
       } catch (err) {
         console.error(err);
+        if (err?.response?.status === 404) {
+          this.merchandiseError = "Produk yang Anda cari tidak ditemukan.";
+        } else if (err?.response?.status === 400) {
+          this.merchandiseError = "Permintaan produk tidak valid.";
+        } else {
+          this.merchandiseError = "Detail produk tidak dapat dimuat saat ini.";
+        }
+      } finally {
+        this.isLoading = false;
       }
     },
     formatPrice(price) {
