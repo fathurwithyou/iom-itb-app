@@ -10,7 +10,7 @@ export const DELETE_MERCHANDISE = "deleteMerchandise";
 
 const state = {
     merchandises: [],
-    currentMerchandise: [],
+    currentMerchandise: null,
 };
 
 const getters = {
@@ -46,6 +46,7 @@ const actions = {
                     resolve(data);
                 })
                 .catch(err => {
+                    context.commit(SET_MERCHANDISE_DETAIL, null);
                     console.error("Error fetching jobs:", err);
                     reject(err);
                 });
