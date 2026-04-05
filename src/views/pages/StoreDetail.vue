@@ -1,118 +1,125 @@
 <template>
   <div class="bg-colorSecond pt-[10px] pb-[32px] px-[18px] md:px-[70px]">
-    <div
-      v-if="isLoading"
-      class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-lg shadow p-6 text-center text-gray-600"
-    >
-      Memuat detail produk...
-    </div>
+    <!-- Merchandise Details -->
+    <div class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-lg shadow p-6">
+      <div class="flex flex-col md:flex-row">
+        <div class="flex-shrink-0">
+          <img
+            v-if="currentMerchandise?.image"
+            :src="currentMerchandise.image"
+            :alt="currentMerchandise.name"
+            class="rounded-lg w-full md:w-[300px] h-auto"
+          />
+          <img
+            v-else
+            :src="require('@/assets/image/default.png')"
+            alt="No Image"
+            class="rounded-lg w-full md:w-[300px] h-auto"
+          />
+        </div>
+        <div class="flex-1 mt-4 md:mt-0 md:ml-6">
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ currentMerchandise.name }}</h1>
+          <p class="text-gray-700 mb-4">{{ currentMerchandise.description }}</p>
+          <p class="text-2xl font-bold text-main mb-4">{{ formatPrice(currentMerchandise.price) }}</p>
+          <p class="text-gray-500 mb-6">Stok: {{ currentMerchandise.stock }}</p>
 
-    <div
-      v-else-if="merchandiseError"
-      class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-lg shadow p-6 text-center"
-    >
-      <h1 class="text-2xl font-bold text-gray-900 mb-2">Produk tidak tersedia</h1>
-      <p class="text-gray-600 mb-6">{{ merchandiseError }}</p>
-      <a
-        href="/merchandise"
-        class="inline-flex items-center px-5 py-2 text-white bg-main rounded-lg hover:bg-blue-800"
-      >
-        Kembali ke daftar merchandise
-      </a>
-    </div>
-
-    <template v-else>
-      <!-- Merchandise Details -->
-      <div class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-lg shadow p-6">
-        <div class="flex flex-col md:flex-row">
-          <div class="flex-shrink-0">
-            <img
-              v-if="currentMerchandise?.image"
-              :src="currentMerchandise.image"
-              :alt="currentMerchandise.name"
-              class="rounded-lg w-full md:w-[300px] h-auto"
+          <!-- Quantity Input -->
+          <div class="mb-4">
+            <label for="quantity" class="block text-sm font-medium text-gray-700">
+              Jumlah Produk <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              id="quantity"
+              v-model="quantity"
+              min="1"
+              step="1"
+              inputmode="numeric"
+              :max="currentMerchandise.stock"
+              @keydown="blockInvalidQuantityInput"
+              @input="sanitizeQuantity"
+              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-main focus:border-main sm:text-sm"
+              :class="errors.quantity ? 'border-red-500' : 'border-gray-300'"
             />
-            <img
-              v-else
-              :src="require('@/assets/image/default.png')"
-              alt="No Image"
-              class="rounded-lg w-full md:w-[300px] h-auto"
-            />
-          </div>
-          <div class="flex-1 mt-4 md:mt-0 md:ml-6">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ currentMerchandise.name }}</h1>
-            <p class="text-gray-700 mb-4">{{ currentMerchandise.description }}</p>
-            <p class="text-2xl font-bold text-main mb-4">{{ formatPrice(currentMerchandise.price) }}</p>
-            <p class="text-gray-500 mb-6">Stok: {{ currentMerchandise.stock }}</p>
-
-            <!-- Quantity Input -->
-            <div class="mb-4">
-              <label for="quantity" class="block text-sm font-medium text-gray-700">Jumlah Produk</label>
-              <input
-                type="number"
-                id="quantity"
-                v-model.number="quantity"
-                min="1"
-                :max="currentMerchandise.stock"
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-main focus:border-main sm:text-sm"
-              />
-            </div>
+            <p v-if="errors.quantity" class="mt-1 text-sm text-red-500">{{ errors.quantity }}</p>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- User Information Form -->
-      <div class="mt-6 bg-white border border-gray-200 rounded-lg shadow p-6 max-w-3xl mx-auto">
-        <h2 class="text-xl font-bold mb-4">Informasi Pembeli</h2>
+    <!-- User Information Form -->
+    <div class="mt-6 bg-white border border-gray-200 rounded-lg shadow p-6 max-w-3xl mx-auto">
+      <h2 class="text-xl font-bold mb-4">Informasi Pembeli</h2>
 
       <div class="mb-4">
-        <label for="name" class="block text-sm font-medium text-gray-700">Nama</label>
+        <label for="name" class="block text-sm font-medium text-gray-700">
+          Nama <span class="text-red-500">*</span>
+        </label>
         <input
           type="text"
           id="name"
-          v-model="userInfo.name"
-          required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-main focus:border-main sm:text-sm"
+          v-model.trim="userInfo.name"
+          class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-main focus:border-main sm:text-sm"
+          :class="errors.name ? 'border-red-500' : 'border-gray-300'"
         />
+        <p v-if="errors.name" class="mt-1 text-sm text-red-500">{{ errors.name }}</p>
       </div>
 
       <div class="mb-4">
-        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+        <label for="email" class="block text-sm font-medium text-gray-700">
+          Email <span class="text-red-500">*</span>
+        </label>
         <input
           type="email"
           id="email"
-          v-model="userInfo.email"
-          required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-main focus:border-main sm:text-sm"
+          v-model.trim="userInfo.email"
+          class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-main focus:border-main sm:text-sm"
+          :class="errors.email ? 'border-red-500' : 'border-gray-300'"
         />
+        <p v-if="errors.email" class="mt-1 text-sm text-red-500">{{ errors.email }}</p>
       </div>
 
       <div class="mb-4">
-        <label for="noTelp" class="block text-sm font-medium text-gray-700">No. Telepon</label>
+        <label for="noTelp" class="block text-sm font-medium text-gray-700">
+          No. Telepon <span class="text-red-500">*</span>
+        </label>
         <input
           type="text"
           id="noTelp"
           v-model="userInfo.noTelp"
-          required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-main focus:border-main sm:text-sm"
+          inputmode="numeric"
+          @input="sanitizePhone"
+          class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-main focus:border-main sm:text-sm"
+          :class="errors.noTelp ? 'border-red-500' : 'border-gray-300'"
         />
+        <p v-if="errors.noTelp" class="mt-1 text-sm text-red-500">{{ errors.noTelp }}</p>
       </div>
 
       <div class="mb-4">
-        <label for="address" class="block text-sm font-medium text-gray-700">Alamat Lengkap</label>
+        <label for="address" class="block text-sm font-medium text-gray-700">
+          Alamat Lengkap <span class="ext-red-500">*</span>
+        </label>
         <textarea
           id="address"
-          v-model="userInfo.address"
-          required
+          v-model.trim="userInfo.address"
           rows="3"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-main focus:border-main sm:text-sm"
+          class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-main focus:border-main sm:text-sm"
+          :class="errors.address ? 'border-red-500' : 'border-gray-300'"
         ></textarea>
+        <p v-if="errors.address" class="mt-1 text-sm text-red-500">{{ errors.address }}</p>
       </div>
 
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700">Upload Bukti Pembayaran</label>
-        <span class="block text-sm font-medium text-gray-500">No Rek. 12345678 a/n. suka (BCA)</span>
-       <span class="block text-sm font-medium text-gray-500">Total Pembayaran: {{ formatPrice(quantity * currentMerchandise.price) }}</span>
+        <label class="block text-sm font-medium text-gray-700">
+          Upload Bukti Pembayaran <span class="text-red-500">*</span>
+        </label>
+        <span class="block text-sm font-medium text-gray-500">
+          No Rek. 12345678 a/n. suka (BCA)
+        </span>
+        <span class="block text-sm font-medium text-gray-500">
+          Total Pembayaran: {{ formatPrice(quantity * currentMerchandise.price) }}
+        </span>
+
         <input
           type="file"
           ref="file"
@@ -123,50 +130,58 @@
           class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-main focus:border-main sm:text-sm hidden"
         />
 
-        <!-- Image Preview -->
         <label 
           @dragover="dragover"
           @dragleave="dragleave"
           @drop="drop"
           for="payment" 
           :class="`cursor-pointer hover:opacity-[0.8] ${ isDragging ? 'opacity-[0.8]' : ''}`"
-          >
+        >
           <img v-if="file.length" :src="generateURL(file[0] || '')" alt="Preview" class="rounded-lg w-full h-auto mt-1" />
-          <div v-else class="mt-1 w-full h-[120px] border border-gray-400 border-dashed rounded-[8px] flex justify-center items-center">
-            <div  class="text-center">
-            <p class="text-gray-600 text-[14px] flex items-center gap-2 font-[600]"><img :src="require('@/assets/icon/upload.svg')" alt="icon" class="rounded-lg w-[14px] h-auto" />Click to choose a file or drag here</p>
-            <p class="text-gray-600 text-[11px]">Accepts .jpg, .jpeg, .png, .pdf files</p>
-            <p class="text-gray-600 text-[11px]">Size limit: 5 MB</p>
-          </div>
+          <div
+            v-else
+            class="mt-1 w-full h-[120px] border border-gray-400 border-dashed rounded-[8px] flex justify-center items-center"
+            :class="errors.payment ? 'border-red-500' : 'border-gray-400'"
+          >
+            <div class="text-center">
+              <p class="text-gray-600 text-[14px] flex items-center gap-2 font-[600]">
+                <img :src="require('@/assets/icon/upload.svg')" alt="icon" class="rounded-lg w-[14px] h-auto" />
+                Click to choose a file or drag here
+              </p>
+              <p class="text-gray-600 text-[11px]">Accepts .jpg, .jpeg, .png, .pdf files</p>
+              <p class="text-gray-600 text-[11px]">Size limit: 5 MB</p>
+            </div>
           </div>
         </label>
+
+        <p v-if="errors.payment" class="mt-1 text-sm text-red-500">
+          {{ errors.payment }}
+        </p>
       </div>
 
-        <!-- Submit Button -->
-        <div class="mt-6">
-          <button
-            type="button"
-            @click="submitCheckout"
-            class="inline-flex items-center px-5 py-2 text-white bg-main rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300"
-          >
-          Pesan Sekarang
-          </button>
-        </div>
+      <!-- Submit Button -->
+      <div class="mt-6">
+        <button
+          type="button"
+          @click="submitCheckout"
+          class="inline-flex items-center px-5 py-2 text-white bg-main rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300"
+        >
+        Pesan Sekarang
+        </button>
       </div>
-    </template>
+    </div>
   </div>
 </template>
 
 <script>
 import { GET_MERCHANDISE_DETAIL } from "@/store/merchandises.module";
 import { POST_TRANSACTION } from "@/store/transactions.module";
+import { error } from "jquery";
 import Swal from 'sweetalert2';
 
 export default {
   data() {
     return {
-      isLoading: true,
-      merchandiseError: "",
       quantity: 1,
       userInfo: {
         name: "",
@@ -177,6 +192,14 @@ export default {
       file: [],
       payment: "",
       isDragging: false, // Track if a file is being dragged over
+      errors: {
+        quantity: "",
+        name: "",
+        email: "",
+        noTelp: "",
+        address: "",
+        payment: "",
+      },
     };
   },
   computed: {
@@ -192,24 +215,12 @@ export default {
   },
   methods: {
     async getData() {
-      this.isLoading = true;
-      this.merchandiseError = "";
-
       try {
         await this.$store.dispatch(GET_MERCHANDISE_DETAIL, {
           id: this.merchandiseId,
         });
       } catch (err) {
         console.error(err);
-        if (err?.response?.status === 404) {
-          this.merchandiseError = "Produk yang Anda cari tidak ditemukan.";
-        } else if (err?.response?.status === 400) {
-          this.merchandiseError = "Permintaan produk tidak valid.";
-        } else {
-          this.merchandiseError = "Detail produk tidak dapat dimuat saat ini.";
-        }
-      } finally {
-        this.isLoading = false;
       }
     },
     formatPrice(price) {
@@ -301,18 +312,10 @@ export default {
         : '';
     },
     async submitCheckout() {
-      if (
-        this.quantity <= 0 ||
-        this.quantity > this.currentMerchandise.stock ||
-        !this.userInfo.name ||
-        !this.userInfo.email ||
-        !this.userInfo.noTelp ||
-        !this.userInfo.address ||
-        !this.payment
-      ) {
+      if (!this.validateForm()) {
         Swal.fire({
           title: "Required!",
-          text: "Complete all forms correctly.",
+          text: "Mohon lengkapi semua form dengan benar.",
           icon: "warning",
         });
         return;
@@ -325,7 +328,7 @@ export default {
           email: this.userInfo.email,
           noTelp: this.userInfo.noTelp,
           address: this.userInfo.address,
-          qty: this.quantity,
+          qty: Number(this.quantity),
           payment: this.payment,
         },
       };
@@ -359,6 +362,99 @@ export default {
           });
         }
       }
+    },
+    clearErrors() {
+      this.errors = {
+        quantity: "",
+        name: "",
+        email: "",
+        noTelp: "",
+        address: "",
+        payment: "",
+      };
+    },
+
+    blockInvalidQuantityInput(e) {
+      if (["e", "E", "+", "-", ".", ","].includes(e.key)) {
+        e.preventDefault();
+      }
+    },
+
+    sanitizeQuantity() {
+      const rawValue = String(this.quantity ?? "");
+      const cleanedValue = rawValue.replace(/[^0-9]/g, "");
+
+      if (cleanedValue === "") {
+        this.quantity = "";
+        return;
+      }
+
+      this.quantity = parseInt(cleanedValue, 10);
+    },
+
+    sanitizePhone() {
+      this.userInfo.noTelp = this.userInfo.noTelp.replace(/[^0-9]/g, "");
+    },
+
+    validateForm() {
+      this.clearErrors();
+      let isValid = true;
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const phoneRegex = /^[0-9]+$/;
+
+      const qty = Number(this.quantity);
+      const stock = Number(this.currentMerchandise.stock || 0);
+
+      if (!this.quantity && this.quantity !== 0) {
+        this.errors.quantity = "Jumlah produk wajib diisi.";
+        isValid = false;
+      } else if (!Number.isInteger(qty)) {
+        this.errors.quantity = "Jumlah produk harus bilangan bulat.";
+        isValid = false;
+      } else if (qty < 1) {
+        this.errors.quantity = "Jumlah produk minimal 1.";
+        isValid = false;
+      } else if (stock && qty > stock) {
+        this.errors.quantity = `Jumlah produk tidak boleh melebihi stok (${stock}).`;
+        isValid = false;
+      }
+
+      if (!this.userInfo.name.trim()) {
+        this.errors.name = "Nama wajib diisi.";
+        isValid = false;
+      }
+
+      if (!this.userInfo.email.trim()) {
+        this.errors.email = "Email wajib diisi.";
+        isValid = false;
+      } else if (!emailRegex.test(this.userInfo.email)) {
+        this.errors.email = "Format email tidak valid.";
+        isValid = false;
+      }
+
+      if (!this.userInfo.noTelp.trim()) {
+        this.errors.noTelp = "No. Telepon wajib diisi.";
+        isValid = false;
+      } else if (!phoneRegex.test(this.userInfo.noTelp)) {
+        this.errors.noTelp = "No. Telepon hanya boleh angka.";
+        isValid = false;
+      } else if (this.userInfo.noTelp.length < 10 || this.userInfo.noTelp.length > 15) {
+        this.errors.noTelp = "No. Telepon harus 10 hingga 15 digit.";
+        isValid = false;
+      }
+
+      if (!this.userInfo.address.trim()) {
+        this.errors.address = "Alamat lengkap wajib diisi.";
+        isValid = false;
+      }
+
+      if (!this.payment) {
+        this.errors.payment = "Bukti pembayaran wajib diunggah.";
+        isValid = false;
+      }
+
+      return isValid;
     },
   },
 };
