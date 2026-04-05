@@ -11,9 +11,21 @@
         <p class="font-[500] text-[14px] md:text-[16px] text-main whitespace-pre-line mb-[24px]">
           IOM-ITB membantu para mahasiswa ITB yang membutuhkan bantuan, baik dalam hal finansial (UKT, Biaya Hidup, dll) ataupun non-finansial (pendampingan).
         </p>
-        <button @click="openTallyPopup" class="inline-flex items-center px-3 py-2 text-[18px] font-medium text-center text-white bg-main rounded-full hover:opacity-[0.8] focus:ring-4 focus:outline-none focus:ring-blue-300">
-          Donasi Sekarang
-        </button>
+        <div class="flex flex-wrap gap-3">
+            <button
+              @click="openTallyPopup"
+              class="inline-flex items-center px-5 py-3 text-[16px] md:text-[18px] font-medium text-center text-white bg-main rounded-full hover:opacity-[0.9] focus:ring-4 focus:outline-none focus:ring-blue-300 transition"
+            >
+              Donasi Sekarang
+            </button>
+
+            <button
+              @click="scrollToGuide"
+              class="inline-flex items-center px-5 py-3 text-[16px] md:text-[18px] font-medium text-center text-main border border-main rounded-full hover:bg-blue-50 transition"
+            >
+              Lihat Tata Cara
+            </button>
+          </div>
       </div>
       <img :src="require('@/assets/image/donation-header.png')" alt="Donation" class="w-full md:w-1/2 p-4 md:p-20 hidden md:block">
     </div>
@@ -72,90 +84,351 @@
       </div>
     </div>
   </div>
+  <div
+    id="payment-guide"
+    class="bg-colorSecond py-[48px] md:py-[72px] px-[18px] md:px-[70px]"
+  >
+    <div class="max-w-[1280px] mx-auto">
+      <div class="text-center mb-[32px] md:mb-[48px]">
+
+        <h2 class="text-main text-[32px] md:text-[42px] font-[700] mb-3">
+          Tata Cara Pembayaran Donasi
+        </h2>
+
+        <p
+          class="text-main/80 text-[16px] md:text-[17px] max-w-[760px] mx-auto leading-relaxed"
+        >
+          Ikuti langkah berikut agar proses donasi berjalan mudah, jelas, dan
+          dapat segera diverifikasi oleh tim IOM-ITB.
+        </p>
+      </div>
+
+      <!-- Step cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div
+          v-for="step in paymentSteps"
+          :key="step.number"
+          class="bg-white rounded-[28px] p-6 md:p-8 shadow-soft border border-[#E7ECF8] h-full"
+        >
+          <div class="flex items-center justify-between mb-5">
+            <div
+              class="w-[56px] h-[56px] rounded-full bg-main text-white flex items-center justify-center text-[22px] font-[700]"
+            >
+              {{ step.number }}
+            </div>
+          </div>
+
+          <h3 class="text-main text-[22px] md:text-[24px] font-[700] mb-3">
+            {{ step.title }}
+          </h3>
+
+          <p class="text-main/85 text-[15px] md:text-[16px] leading-relaxed font-[400]">
+            {{ step.description }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Detail cards -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Left -->
+        <div
+          class="bg-white rounded-[28px] p-6 md:p-8 shadow-soft border border-[#E7ECF8]"
+        >
+          <div class="flex items-center gap-3 mb-5">
+            <div
+              class="w-[48px] h-[48px] rounded-full bg-main text-white flex items-center justify-center"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9 12h6m-6 4h6M8 4h8a2 2 0 012 2v12a2 2 0 01-2 2H8a2 2 0 01-2-2V6a2 2 0 012-2z"
+                />
+              </svg>
+            </div>
+            <h3 class="text-main text-[24px] md:text-[26px] font-[800]">
+              Rincian Proses Donasi
+            </h3>
+          </div>
+
+          <div class="space-y-4">
+            <div
+              v-for="(item, index) in paymentDetails"
+              :key="index"
+              class="flex items-start gap-3"
+            >
+              <div
+                class="w-6 h-6 min-w-[24px] rounded-full bg-[#E8EEFF] text-main flex items-center justify-center mt-0.5"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-3.5 h-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+
+              <div>
+                <p class="text-main text-[18px] md:text-[19px] font-[800]">
+                  {{ item.title }}
+                </p>
+                <p class="text-main/80 text-[15px] md:text-[16px] leading-relaxed">
+                  {{ item.description }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 bg-[#F6F8FF] border border-[#DCE5FF] rounded-[22px] p-4">
+            <p class="text-main text-[14px] md:text-[15px] leading-relaxed">
+              <span class="font-[700]">Catatan:</span> Pastikan data yang diisi
+              sesuai, bukti pembayaran terlihat jelas, dan pilih metode
+              pengiriman tanda terima melalui WhatsApp atau email.
+            </p>
+          </div>
+        </div>
+
+        <!-- Right -->
+        <div
+          class="bg-white rounded-[28px] p-6 md:p-8 shadow-soft border border-[#E7ECF8]"
+        >
+          <div class="flex items-center gap-3 mb-5">
+            <div
+              class="w-[48px] h-[48px] rounded-full bg-main text-white flex items-center justify-center"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M17 9V7a5 5 0 00-10 0v2m-2 0h14a1 1 0 011 1v9a1 1 0 01-1 1H5a1 1 0 01-1-1v-9a1 1 0 011-1z"
+                />
+              </svg>
+            </div>
+            <h3 class="text-main text-[24px] md:text-[26px] font-[700]">
+              Metode & Informasi Pembayaran
+            </h3>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div
+              v-for="(method, index) in paymentMethods"
+              :key="index"
+              class="border border-[#E4E9F5] rounded-[22px] p-4 bg-[#FAFBFF]"
+            >
+              <p class="text-main text-[18px] font-[700] mb-1">
+                {{ method.title }}
+              </p>
+              <p class="text-main/80 text-[15px] leading-relaxed">
+                {{ method.description }}
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-main rounded-[28px] p-6 text-white mb-5">
+            <h4 class="text-[20px] md:text-[22px] font-[700] mb-3">
+              Setelah membaca tata cara pembayaran
+            </h4>
+            <p class="text-[15px] md:text-[16px] leading-relaxed opacity-95 mb-5">
+              Silakan lanjutkan donasi melalui form yang telah disediakan.
+              Informasi yang Anda masukkan akan membantu proses verifikasi dan
+              pengiriman tanda terima.
+            </p>
+            <button
+              @click="openTallyPopup"
+              class="bg-white text-main font-[700] px-5 py-3 rounded-full hover:opacity-[0.92] transition"
+            >
+              Buka Form Donasi
+            </button>
+          </div>
+
+          <div class="space-y-3">
+            <div
+              v-for="(note, index) in additionalNotes"
+              :key="index"
+              class="flex items-start gap-3"
+            >
+              <div class="w-2.5 h-2.5 rounded-full bg-main mt-2"></div>
+              <p class="text-main/85 text-[15px] md:text-[16px] leading-relaxed">
+                {{ note }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA Bottom -->
+  <div class="bg-white py-[32px] md:py-[48px] px-[18px] md:px-[70px]">
+    <div
+      class="max-w-[1100px] mx-auto bg-main rounded-[32px] px-6 md:px-10 py-8 md:py-10 text-white flex flex-col md:flex-row md:items-center md:justify-between gap-5"
+    >
+      <div>
+        <h3 class="text-[24px] md:text-[32px] font-[700] mb-2">
+          Siap menyalurkan donasi Anda?
+        </h3>
+        <p class="text-[14px] md:text-[16px] leading-relaxed opacity-95 max-w-[700px]">
+          Kontribusi Anda akan sangat berarti dalam mendukung mahasiswa ITB
+          yang membutuhkan bantuan finansial maupun pendampingan.
+        </p>
+      </div>
+
+      <button
+        @click="openTallyPopup"
+        class="bg-white text-main font-[700] px-6 py-3 rounded-full whitespace-nowrap hover:opacity-[0.92] transition"
+      >
+        Donasi Sekarang
+      </button>
+    </div>
+  </div>
 </template>
 
 <script>
 import HeaderItem from "@/components/header/HeaderItem.vue";
 
 export default {
+  name: "DonationView",
   components: {
     HeaderItem,
   },
-  setup() {
-    return {};
-  },
   data() {
     return {
-      history: "IOM-ITB merupakan perkumpulan Orang Tua Mahasiswa ITB yang menjadi salah satu mitra Institut Teknologi Bandung.\n\nBerdiri sejak tanggal 14 Juli 1968, dan digagas oleh istri-istri dosen ITB atas dasar kepedulian terhadap kondisi mahasiswa yang terkendala biaya dalam melaksanakan studinya selama perkuliahan berlangsung.\n\nDISAHKAN SEBAGAI BADAN HUKUM : Pada tanggal 16 Desember 1974 berdasarkan: \nSurat Keputusan Pengadilan Negeri Kelas I Bandung \nNo: 1/1974/PBH/Bdg.\n\n",
-      functionality: "IOM-ITB berfungsi sebagai mitra ITB, khususnya dalam pembinaan kelangsungan pendidikan yang bersifat sosial dan kekeluargaan.\n\n",
-      goals: "IOM-ITB bermaksud dan bertujuan ikut serta membina mahasiswa, dengan menjalin hubungan antar sesama orangtua mahasiswa, menghimpun, menampung dan menyalurkan daya dan usaha.",
-      activity: [
+      paymentSteps: [
         {
-          image: "slide1.png",
-          title: "Noteworthy technology acquisition 2021",
-          description: "Here are the biggest enterprise technology acquisitions of 2021 so far, in reverse chronological order.",
-          url: "/",
+          number: "1",
+          title: "Isi Data Donatur",
+          description:
+            "Lengkapi nama, email, dan nomor WhatsApp agar tim IOM-ITB dapat melakukan pencatatan serta mengirimkan konfirmasi donasi.",
         },
         {
-          image: "slide1.png",
-          title: "Noteworthy technology acquisition 2023",
-          description: "Here are the biggest enterprise technology acquisitions of 2021 so far, in reverse chronological order.",
-          url: "/",
+          number: "2",
+          title: "Lakukan Pembayaran",
+          description:
+            "Pilih metode pembayaran yang tersedia pada form. Ikuti instruksi pembayaran hingga transaksi selesai dilakukan.",
         },
         {
-          image: "slide1.png",
-          title: "Noteworthy technology acquisition 2021",
-          description: "Here are the biggest enterprise technology acquisitions of 2021 so far, in reverse chronological order.",
-          url: "/",
+          number: "3",
+          title: "Unggah Bukti & Konfirmasi",
+          description:
+            "Unggah bukti pembayaran dengan jelas. Tanda terima akan dikirim melalui WhatsApp atau email.",
+        },
+      ],
+
+      paymentDetails: [
+        {
+          title: "Lengkapi data diri",
+          description:
+            "Masukkan nama, email, dan nomor HP/WA yang aktif agar proses administrasi berjalan lancar.",
         },
         {
-          image: "slide1.png",
-          title: "Noteworthy technology acquisition 2023",
-          description: "Here are the biggest enterprise technology acquisitions of 2021 so far, in reverse chronological order.",
-          url: "/",
+          title: "Pilih jenis kontribusi",
+          description:
+            "Pilih kategori donasi atau kontribusi sesuai kebutuhan yang tersedia pada form.",
         },
         {
-          image: "slide1.png",
-          title: "Noteworthy technology acquisition 2021",
-          description: "Here are the biggest enterprise technology acquisitions of 2021 so far, in reverse chronological order.",
-          url: "/",
+          title: "Lakukan pembayaran sesuai instruksi",
+          description:
+            "Setelah mengisi form, lakukan pembayaran melalui metode yang ditampilkan pada halaman donasi.",
         },
         {
-          image: "slide1.png",
-          title: "Noteworthy technology acquisition 2023",
-          description: "Here are the biggest enterprise technology acquisitions of 2021 so far, in reverse chronological order.",
-          url: "/",
+          title: "Unggah bukti pembayaran",
+          description:
+            "Pastikan file bukti pembayaran jelas, terbaca, dan sesuai nominal transaksi yang dilakukan.",
         },
+        {
+          title: "Pilih pengiriman tanda terima",
+          description:
+            "Tanda terima dapat dikirimkan melalui WhatsApp atau email sesuai pilihan Anda pada form.",
+        },
+      ],
+
+      paymentMethods: [
+        {
+          title: "Transfer / Pembayaran Digital",
+          description:
+            "Gunakan metode pembayaran yang tersedia pada form donasi sesuai instruksi yang muncul.",
+        },
+        {
+          title: "Upload Bukti Bayar",
+          description:
+            "Bukti pembayaran dibutuhkan untuk membantu proses verifikasi oleh admin IOM-ITB.",
+        },
+        {
+          title: "Konfirmasi via WhatsApp",
+          description:
+            "Anda dapat memilih agar tanda terima atau konfirmasi donasi dikirim ke nomor WhatsApp.",
+        },
+        {
+          title: "Konfirmasi via Email",
+          description:
+            "Alternatif pengiriman tanda terima dan informasi administrasi donasi melalui email.",
+        },
+      ],
+
+      additionalNotes: [
+        "Pastikan nominal pembayaran sesuai dengan instruksi yang ditampilkan pada form.",
+        "Gunakan nomor WhatsApp dan email aktif agar informasi konfirmasi dapat diterima dengan baik.",
+        "Jika bukti pembayaran belum valid, Anda mungkin perlu mengunggah ulang file yang lebih jelas.",
       ],
     };
   },
-  computed: {},
+
   methods: {
+    scrollToGuide() {
+      const section = document.getElementById("payment-guide");
+      if (section) {
+        section.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    },
+
     openTallyPopup() {
-      const formId = 'mZJe8e';
+      const formId = "mZJe8e";
       const options = {
-        layout: 'modal',
+        layout: "modal",
         width: 700,
         autoClose: 5000,
         hiddenFields: {
-          ref: 'downloads',
-          email: 'alice@example.com'
+          ref: "donation-page",
         },
         onOpen: () => {
-          // Callback saat popup dibuka
-          console.log('Popup form dibuka');
+          console.log("Popup form dibuka");
         },
         onClose: () => {
-          // Callback saat popup ditutup
-          console.log('Popup form ditutup');
+          console.log("Popup form ditutup");
         },
         onSubmit: (payload) => {
-          // Callback saat form disubmit
-          console.log('Form disubmit dengan payload:', payload);
-        }
+          console.log("Form disubmit dengan payload:", payload);
+        },
       };
-      Tally.openPopup(formId, options);
-    }
+
+      if (typeof Tally !== "undefined") {
+        Tally.openPopup(formId, options);
+      } else {
+        console.error("Tally belum tersedia.");
+      }
+    },
   },
 };
 </script>
@@ -169,5 +442,8 @@ export default {
 }
 .text-main {
   color: #1c3faa;
+}
+.shadow-soft {
+  box-shadow: 0 14px 40px rgba(28, 63, 170, 0.08);
 }
 </style>
