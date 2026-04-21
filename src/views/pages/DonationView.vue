@@ -1,4 +1,42 @@
 <template>
+  <FormDonation v-if="isDonationOpen" mode="midtrans" @close="closeDonationPopup" />
+
+  <div
+    v-if="isChooserOpen"
+    class="fixed inset-0 bg-black/60 z-[98] flex items-center justify-center p-4"
+    @click.self="closeChooser"
+  >
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 md:p-8">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-[20px] md:text-[24px] font-[700] text-main">Pilih Metode Pembayaran</h3>
+        <button @click="closeChooser" class="text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
+      </div>
+      <p class="text-[14px] text-gray-600 mb-5">
+        Silakan pilih metode pembayaran donasi Anda.
+      </p>
+      <div class="flex flex-col gap-3">
+        <button
+          @click="chooseManual"
+          class="w-full border border-main text-main font-[700] rounded-xl px-4 py-4 text-left hover:bg-blue-50 transition"
+        >
+          <div class="text-[16px] md:text-[18px]">Pembayaran Manual</div>
+          <div class="text-[13px] text-gray-600 font-[400] mt-1">
+            Transfer bank manual + unggah bukti. Form oleh Tally.
+          </div>
+        </button>
+        <button
+          @click="chooseMidtrans"
+          class="w-full bg-main text-white font-[700] rounded-xl px-4 py-4 text-left hover:opacity-[0.92] transition"
+        >
+          <div class="text-[16px] md:text-[18px]">Pembayaran Otomatis</div>
+          <div class="text-[13px] text-white/90 font-[400] mt-1">
+            Bayar langsung via kartu/VA/e-wallet/QRIS (Midtrans).
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="bg-colorSecond pt-[10px] pb-[32px] px-[18px] md:px-[70px]">
     <div class="flex flex-col md:flex-row justify-between items-center">
       <div class="w-full md:w-1/2">
@@ -13,7 +51,7 @@
         </p>
         <div class="flex flex-wrap gap-3">
             <button
-              @click="openTallyPopup"
+              @click="openChooser"
               class="inline-flex items-center px-5 py-3 text-[16px] md:text-[18px] font-medium text-center text-white bg-main rounded-full hover:opacity-[0.9] focus:ring-4 focus:outline-none focus:ring-blue-300 transition"
             >
               Donasi Sekarang
@@ -256,7 +294,7 @@
               pengiriman tanda terima.
             </p>
             <button
-              @click="openTallyPopup"
+              @click="openChooser"
               class="bg-white text-main font-[700] px-5 py-3 rounded-full hover:opacity-[0.92] transition"
             >
               Buka Form Donasi
@@ -296,7 +334,7 @@
       </div>
 
       <button
-        @click="openTallyPopup"
+        @click="openChooser"
         class="bg-white text-main font-[700] px-6 py-3 rounded-full whitespace-nowrap hover:opacity-[0.92] transition"
       >
         Donasi Sekarang
@@ -307,14 +345,18 @@
 
 <script>
 import HeaderItem from "@/components/header/HeaderItem.vue";
+import FormDonation from "@/components/form/FormDonation.vue";
 
 export default {
   name: "DonationView",
   components: {
     HeaderItem,
+    FormDonation,
   },
   data() {
     return {
+      isDonationOpen: false,
+      isChooserOpen: false,
       paymentSteps: [
         {
           number: "1",
@@ -366,31 +408,31 @@ export default {
 
       paymentMethods: [
         {
-          title: "Transfer / Pembayaran Digital",
+          title: "Online (Midtrans)",
           description:
-            "Gunakan metode pembayaran yang tersedia pada form donasi sesuai instruksi yang muncul.",
+            "Bayar langsung via kartu kredit, transfer bank, e-wallet, atau QRIS melalui jendela pembayaran Midtrans.",
         },
         {
-          title: "Upload Bukti Bayar",
+          title: "Manual (Transfer Bank)",
           description:
-            "Bukti pembayaran dibutuhkan untuk membantu proses verifikasi oleh admin IOM-ITB.",
+            "Transfer ke rekening IOM-ITB, tambahkan 3 digit kode unik fakultas Anda di akhir nominal, lalu unggah bukti bayar.",
         },
         {
-          title: "Konfirmasi via WhatsApp",
+          title: "Kode Unik Fakultas",
           description:
-            "Anda dapat memilih agar tanda terima atau konfirmasi donasi dikirim ke nomor WhatsApp.",
+            "Kode unik transfer manual mengikuti kode 3 digit fakultas donor (dipilih di form) — bukan lagi kode per jenis donasi.",
         },
         {
-          title: "Konfirmasi via Email",
+          title: "Konfirmasi via WhatsApp/Email",
           description:
-            "Alternatif pengiriman tanda terima dan informasi administrasi donasi melalui email.",
+            "Tanda terima donasi akan dikirim melalui WhatsApp atau email sesuai pilihan Anda.",
         },
       ],
 
       additionalNotes: [
-        "Pastikan nominal pembayaran sesuai dengan instruksi yang ditampilkan pada form.",
+        "Untuk pembayaran manual, kode unik = 3 digit kode fakultas Anda; kode akan muncul di form setelah memilih fakultas.",
+        "Pembayaran online via Midtrans tidak memerlukan kode unik maupun upload bukti bayar.",
         "Gunakan nomor WhatsApp dan email aktif agar informasi konfirmasi dapat diterima dengan baik.",
-        "Jika bukti pembayaran belum valid, Anda mungkin perlu mengunggah ulang file yang lebih jelas.",
       ],
     };
   },
@@ -403,31 +445,37 @@ export default {
       }
     },
 
-    openTallyPopup() {
+    openChooser() {
+      this.isChooserOpen = true;
+    },
+
+    closeChooser() {
+      this.isChooserOpen = false;
+    },
+
+    chooseManual() {
+      this.isChooserOpen = false;
       const formId = "mZJe8e";
       const options = {
         layout: "modal",
         width: 700,
         autoClose: 5000,
-        hiddenFields: {
-          ref: "donation-page",
-        },
-        onOpen: () => {
-          console.log("Popup form dibuka");
-        },
-        onClose: () => {
-          console.log("Popup form ditutup");
-        },
-        onSubmit: (payload) => {
-          console.log("Form disubmit dengan payload:", payload);
-        },
+        hiddenFields: { ref: "donation-page" },
       };
-
       if (typeof Tally !== "undefined") {
         Tally.openPopup(formId, options);
       } else {
         console.error("Tally belum tersedia.");
       }
+    },
+
+    chooseMidtrans() {
+      this.isChooserOpen = false;
+      this.isDonationOpen = true;
+    },
+
+    closeDonationPopup() {
+      this.isDonationOpen = false;
     },
   },
 };

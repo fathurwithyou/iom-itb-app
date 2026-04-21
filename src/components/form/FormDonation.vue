@@ -1,88 +1,143 @@
 <template>
   <div>
     <div class="fixed w-full h-full bg-black top-0 bottom-0 left-0 right-0 z-[98] opacity-[0.6]" @click="closeModal"></div>
-  <div class="fixed top-0 bottom-0 left-0 right-0 flex items-center z-[99]" @click="closeModal">
-  <div class="bg-white h-[700px] w-full md:w-[80%] shadow-sm p-4 md:p-6 rounded-md mx-auto overflow-scroll my-2" @click.stop>
-    <div class="flex justify-between items-center sticky">
-    <h1 class="text-[24px] md:text-[42px] font-[700] text-center md:text-left">Donasi</h1>
-    <img :src="require('@/assets/icon/icon-close.svg')" class="w-[24px] cursor-pointer" @click.native="closeModal"/>
+    <div class="fixed top-0 bottom-0 left-0 right-0 flex items-center z-[99]" @click="closeModal">
+      <div class="bg-white h-[700px] w-full md:w-[80%] shadow-sm p-4 md:p-6 rounded-md mx-auto overflow-scroll my-2" @click.stop>
+        <div class="flex justify-between items-center sticky">
+          <h1 class="text-[24px] md:text-[42px] font-[700] text-center md:text-left">Donasi</h1>
+          <img :src="require('@/assets/icon/icon-close.svg')" class="w-[24px] cursor-pointer" @click.native="closeModal"/>
+        </div>
+        <form @submit.prevent="handleSubmit" class="mt-6">
+          <h1 class="text-[16px] md:text-[30px] font-[700] text-center md:text-left">Data Diri</h1>
+          <div class="flex flex-col md:flex-row md:justify-between gap-4">
+            <InputText keyValue="name" label="Nama" class="w-full md:w-1/2" :required="true" @update="updateValue" />
+            <InputText keyValue="email" label="Email" class="w-full md:w-1/2" :required="true" @update="updateValue" />
+          </div>
+          <div class="flex flex-col md:flex-row md:justify-between gap-4 mt-4">
+            <InputText keyValue="noWhatsapp" label="No Whatsapp" class="w-full md:w-1/2" :required="true" @update="updateValue" />
+            <div class="hidden md:block md:w-1/2"></div>
+          </div>
+
+          <div class="flex flex-col gap-2 mt-6">
+            <h1 class="text-[16px] md:text-[30px] font-[700] text-center md:text-left">Informasi Donasi</h1>
+            <p>Bapak - Ibu Orang Tua Mahasiswa ITB ysh.,</p>
+            <p>Kami mengucapkan terima kasih atas partisipasi Bapak/Ibu selaku Orang Tua Mahasiswa ITB yang telah turut berkontribusi untuk membantu Mahasiswa ITB melalui IOM ITB. Kontribusi Bapak-Ibu sebagai anggota IOM kami kelompokkan menjadi:<br/>
+              1. Iuran Sukarela (nominal maksimal Rp. 800.000,-)<br/>
+              2. ⁠Sumbangan/Donasi
+            </p>
+            <p>Iuran Sukarela akan kami salurkan selama 4 tahun dalam bentuk bantuan UKT, Tugas Akhir, dan Biaya Hidup bagi mahasiswa yang membutuhkan. Sumbangan/Donasi juga dipergunakan untuk bantuan tak terduga seperti biaya kesehatan, biaya penunjang pendidikan, dan dana talangan darurat.</p>
+            <p>Hormat Kami,<br/>
+              an. Pengurus IOM ITB 2024 2027<br/>
+              Hendro Setyanto<br/>
+              Ketua Umum</p>
+          </div>
+
+          <div class="flex flex-col md:flex-row md:justify-between gap-4 mt-6">
+            <InputSelection
+              keyValue="donationType"
+              label="Jenis Donasi"
+              class="w-full md:w-1/2"
+              :required="true"
+              :options="donationTypeOptions"
+              :value="donationTypeLabel"
+              @update="onDonationTypeChange"
+            />
+            <InputSelection
+              keyValue="facultyLabel"
+              label="Fakultas"
+              class="w-full md:w-1/2"
+              :required="true"
+              :options="facultyOptions"
+              :value="facultyLabel"
+              @update="onFacultyChange"
+            />
+          </div>
+
+          <div class="flex flex-col md:flex-row md:justify-between gap-4 mt-4">
+            <InputText
+              keyValue="amount"
+              label="Nominal (Rp)"
+              :class="showMethodSelector ? 'w-full md:w-1/2' : 'w-full'"
+              :required="true"
+              @update="updateValue"
+            />
+            <InputSelection
+              v-if="showMethodSelector"
+              keyValue="paymentMethod"
+              label="Metode Pembayaran"
+              class="w-full md:w-1/2"
+              :required="true"
+              :options="paymentMethodOptions"
+              :value="data.paymentMethod"
+              @update="updateValue"
+            />
+          </div>
+
+          <div v-if="data.paymentMethod === 'Manual (Transfer Bank)'" class="flex flex-col gap-2 mt-6 bg-gray-50 border border-gray-200 p-4 rounded">
+            <h2 class="text-[16px] md:text-[24px] font-[700]">Petunjuk Transfer Manual</h2>
+            <p>Silakan transfer total donasi ditambah <strong>kode unik fakultas</strong> Anda sebagai 3 digit terakhir nominal, agar donasi mudah diverifikasi.</p>
+            <p v-if="selectedFaculty">
+              Fakultas <strong>{{ selectedFaculty.name }}</strong> — kode unik: <strong class="font-mono">{{ selectedFaculty.kodeUnik }}</strong>
+            </p>
+            <p v-else class="text-sm text-gray-600">Pilih fakultas terlebih dahulu untuk melihat kode unik Anda.</p>
+            <p>Rekening: <strong>130.001-900-0366</strong> Bank Mandiri Kantor Kas Bandung ITB an. IOM ITB</p>
+            <p>Kontak WA: <strong>081573598031</strong> (Ibu Ani Suliawaty)</p>
+            <div class="flex flex-col md:flex-row md:justify-between gap-4 mt-2">
+              <div class="w-full md:w-1/2">
+                <h3 class="text-[14px] md:text-[20px] font-[700]">Mandiri QRIS</h3>
+                <img :src="require('@/assets/image/mandiri-qris.png')"/>
+              </div>
+              <div class="w-full md:w-1/2">
+                <h3 class="text-[14px] md:text-[20px] font-[700]">BSI QRIS</h3>
+                <img :src="require('@/assets/image/bsi-qris-full.png')"/>
+              </div>
+            </div>
+            <div class="flex flex-col gap-4 mt-4">
+              <InputFile keyValue="proof" label="Upload Bukti Bayar" subLabel="" format="all" class="w-full" :required="true" @update="updateValue" />
+            </div>
+          </div>
+
+          <div v-else-if="data.paymentMethod === 'Online (Midtrans)'" class="flex flex-col gap-2 mt-6 bg-blue-50 border border-blue-200 p-4 rounded">
+            <h2 class="text-[16px] md:text-[24px] font-[700]">Pembayaran Online via Midtrans</h2>
+            <p>Setelah menekan <strong>Kirim</strong>, jendela pembayaran Midtrans akan terbuka. Anda dapat membayar dengan kartu kredit, transfer bank, e-wallet, QRIS, dan metode lainnya.</p>
+            <p v-if="selectedFaculty" class="text-sm text-gray-600">Transaksi akan tercatat atas fakultas <strong>{{ selectedFaculty.name }}</strong> (kode {{ selectedFaculty.kodeUnik }}).</p>
+          </div>
+
+          <div class="flex flex-col md:flex-row md:justify-between gap-4 mt-4">
+            <InputCheckboxOptions keyValue="notification" label="Menerima notifikasi melalui?" class="w-full md:w-1/2" :required="true" :options="['Whatsapp', 'Email']" @update="updateValue" />
+          </div>
+
+          <div class="flex flex-col-reverse md:flex-row justify-end gap-4 mt-6">
+            <button type="button" @click="closeModal" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none w-full md:w-auto">
+              Cancel
+            </button>
+            <button type="submit" :disabled="isLoading" class="px-4 py-2 text-sm text-white bg-main rounded-md focus:outline-none w-full md:w-auto">
+              {{ isLoading ? 'Loading...' : 'Kirim' }}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-    <form @submit.prevent="handleSubmit" class="mt-6">
-      <h1 class="text-[16px] md:text-[30px] font-[700] text-center md:text-left">Data Diri</h1>
-      <div class="flex flex-col md:flex-row md:justify-between gap-4">
-        <InputText keyValue="name" label="Nama" class="w-full md:w-1/2" :required="true" @update="updateValue" />
-        <InputText keyValue="email" label="Email" class="w-full md:w-1/2" :required="true" @update="updateValue" />
-      </div>
-      <div class="flex flex-col md:flex-row md:justify-between gap-4 mt-4">
-        <InputText keyValue="noWhatsapp" label="No Whatsapp" class="w-full md:w-1/2" :required="true" @update="updateValue" />
-        <div class="hidden md:block md:w-1/2"></div>
-      </div>
-      <div class="flex flex-col gap-2 mt-4">
-        <h1 class="text-[16px] md:text-[30px] font-[700] text-center md:text-left">Pembayaran Donasi</h1>
-        <p>Bapak - Ibu Orang Tua Mahasiswa ITB ysh.,</p>
-        <p>Kami mengucapkan terima kasih atas partisipasi Bapak/Ibu selaku Orang Tua Mahasiswa ITB  yang telah turut berkontribusi untuk  membantu Mahasiswa ITB melalui IOM ITB. Kontribusi Bapak-Ibu sebagai anggota IOM kami kelompokkan menjadi :<br/>
-            1. Iuran Sukarela (yang nominal maksimal sebesar Rp. 800.000,-)<br/>
-            2. ⁠Sumbangan/Donasi
-        </p>
-        <p>Iuran Sukarela dari Bapak/Ibu tersebut akan kami salurkan selama 4 tahun dalam bentuk bantuan UKT, Tugas Akhir dan Biaya Hidup bagi mahasiswa yang membutuhkan. Hal ini dimaksudkan untuk keberlangsungan program bantuan kepada Mahasiswa.
-Adapun Sumbangan/Donasi dari Bapak/Ibu disamping disalurkan untuk bantuan UKT, Tugas Akhir dan Biaya Hidup, juga dipergunakan untuk bantuan tak terduga bagi Mahasiswa, seperti biaya kesehatan, biaya penunjang pendidikan, dana talangan darurat dll.  
-Sebagai mitra ITB, IOM ITB  senantiasa berkoordinasi dengan Direktorat kemahasiswaan  ITB dalam penyaluran bantuan. Oleh karenanya kontribusi Bapak/Ibu dalam membantu mahasiswa melalui IOM ITB akan sangat membantu para mahasiswa untuk mengatasi kendala biaya selama masa studinya.  Semoga partisipasi Bapak/Ibu menjadi amal jariyah & perwujudan rasa syukur kepada Tuhan atas segala nikmat telah kita terima.</p>
-<p>Hormat Kami,<br/>
-        an. Pengurus IOM ITB 2024 2027<br/>
-        Hendro Setyanto<br/>
-        Ketua Umum</p>
-        <br/>
-        <p>Donasi untuk Ikatan Orang Tua Mahasiswa (IOM) ITB dengan jumlah tidak ditentukan,Donasi ke IOM ITB:</p>
-        <p>
-          1. Kontribusi Iuran Sukarela (tambahkan kode unik <strong>011</strong>)<br/>
-          2. Kontribusi Anggota (tambahkan kode unik <strong>022</strong>)<br/>
-          3.⁠ ⁠Kontribusi Donatur (tambahkan kode unik <strong>033</strong>)<br/>
-          4.⁠ ⁠Pembelian Merchandise (tambahkan kode unik <strong>044</strong>)<br/>
-          5.⁠ ⁠Kontribusi Sukarela (tambahkan kode unik <strong>055</strong>)<br/>
-          Semua donasi ditransfer ke: Rekening <strong>130.001-900-0366</strong> Bank Mandiri Kantor Kas Bandung ITB an. IOM ITB<br/>
-          Kontak WA: <strong>081573598031</strong> (Ibu Ani Suliawaty).
-        </p>
-      </div>
-      <div class="flex flex-col md:flex-row md:justify-between gap-4">
-        <div class="w-full md:w-1/2">
-          <h1 class="text-[16px] md:text-[30px] font-[700] text-center md:text-left">Mandiri QRIS</h1>
-        <img :src="require('@/assets/image/mandiri-qris.png')"/>
-      </div>
-      <div class="w-full md:w-1/2">
-          <h1 class="text-[16px] md:text-[30px] font-[700] text-center md:text-left">BSI QRIS</h1>
-        <img :src="require('@/assets/image/bsi-qris-full.png')"/>
-      </div>
-      </div>
-      <div class="flex flex-col gap-4 mt-4">
-        <InputFile keyValue="proof" label="Upload Bukti Bayar" subLabel="" format="all" class="w-full" :required="true" @update="updateValue" />
-      </div>
-      <div class="flex flex-col md:flex-row md:justify-between gap-4 mt-4">
-        <InputCheckboxOptions keyValue="notification" label="Menerima notifikasi melalui?" class="w-full md:w-1/2" :required="true" :options="['Whatsapp', 'Email']" @update="updateValue" />
-      </div>
-      <!-- Submit and Cancel Buttons -->
-      <div class="flex flex-col-reverse md:flex-row justify-end gap-4 mt-6">
-        <button type="button" @click="closeModal" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none w-full md:w-auto">
-          Cancel
-        </button>
-        <button type="submit" :disabled="isLoading" class="px-4 py-2 text-sm text-white bg-main rounded-md focus:outline-none w-full md:w-auto">
-          {{ isLoading ? 'Loading...' : 'Kirim' }}
-        </button>
-      </div>
-    </form>
   </div>
-</div>
-</div>
 </template>
 
-  
 <script>
 import InputText from "@/components/input/InputText.vue";
-import InputTextarea from "@/components/input/InputTextarea.vue";
 import InputSelection from "@/components/input/InputSelection.vue";
 import InputCheckboxOptions from "@/components/input/InputCheckboxOptions.vue";
 import InputFile from "@/components/input/InputFile.vue";
 import { useStore } from 'vuex';
-import { POST_DONATION } from "@/store/donations.module";
+import Swal from 'sweetalert2';
+import { POST_DONATION, POST_DONATION_SNAP } from "@/store/donations.module";
+import { GET_FACULTIES } from "@/store/faculties.module";
+
+const DONATION_TYPES = [
+  { value: 'iuran_sukarela', label: 'Iuran Sukarela' },
+  { value: 'kontribusi_anggota', label: 'Kontribusi Anggota' },
+  { value: 'kontribusi_donatur', label: 'Kontribusi Donatur' },
+  { value: 'pembelian_merchandise', label: 'Pembelian Merchandise' },
+  { value: 'kontribusi_sukarela', label: 'Kontribusi Sukarela' },
+];
 
 export default {
   components: {
@@ -90,33 +145,71 @@ export default {
     InputCheckboxOptions,
     InputFile,
     InputSelection,
-    InputTextarea
   },
   props: {
     id: {
       type: String,
       required: false
     },
+    mode: {
+      type: String,
+      default: "both",
+      validator: (v) => ["manual", "midtrans", "both"].includes(v),
+    },
   },
   data() {
     return {
       isLoading: false,
       data: {
-        parentName: "",
-        childNim: "",
+        name: "",
+        email: "",
         noWhatsapp: "",
+        amount: "",
+        donationType: "",
+        facultyId: null,
+        paymentMethod: this.mode === "midtrans" ? "Online (Midtrans)" : "Manual (Transfer Bank)",
         proof: null,
         notification: {},
-      }
+      },
+      donationTypeLabel: "",
+      facultyLabel: "",
     };
   },
   setup() {
     const store = useStore();
-
     return { store };
   },
-  mounted() {
+  computed: {
+    facultiesList() {
+      return this.store.getters.faculties || [];
+    },
+    donationTypeOptions() {
+      return DONATION_TYPES.map(t => t.label);
+    },
+    facultyOptions() {
+      return this.facultiesList
+        .filter(f => f.isActive)
+        .map(f => `${f.name} (${f.kodeUnik})`);
+    },
+    paymentMethodOptions() {
+      if (this.mode === "manual") return ["Manual (Transfer Bank)"];
+      if (this.mode === "midtrans") return ["Online (Midtrans)"];
+      return ["Manual (Transfer Bank)", "Online (Midtrans)"];
+    },
+    showMethodSelector() {
+      return this.mode === "both";
+    },
+    selectedFaculty() {
+      return this.facultiesList.find(f => f.id === this.data.facultyId) || null;
+    },
+  },
+  async mounted() {
     document.body.classList.add('no-scroll');
+    try {
+      await this.store.dispatch(GET_FACULTIES);
+    } catch (err) {
+      console.error("Failed to load faculties", err);
+    }
   },
   methods: {
     closeModal() {
@@ -127,26 +220,53 @@ export default {
     updateValue({ key, value }) {
       this.data[key] = value;
     },
+    onDonationTypeChange({ value }) {
+      this.donationTypeLabel = value;
+      const match = DONATION_TYPES.find(t => t.label === value);
+      this.data.donationType = match ? match.value : "";
+    },
+    onFacultyChange({ value }) {
+      this.facultyLabel = value;
+      const match = this.facultiesList.find(f => `${f.name} (${f.kodeUnik})` === value);
+      this.data.facultyId = match ? match.id : null;
+    },
+    buildPayload() {
+      return {
+        name: this.data.name,
+        email: this.data.email,
+        noWhatsapp: this.data.noWhatsapp,
+        amount: Number(this.data.amount) || 0,
+        donationType: this.data.donationType,
+        facultyId: this.data.facultyId,
+        notification: this.data.notification,
+      };
+    },
+    validate() {
+      if (!this.data.donationType) {
+        Swal.fire({ icon: 'warning', title: 'Lengkapi Form', text: 'Pilih jenis donasi.' });
+        return false;
+      }
+      if (!this.data.facultyId) {
+        Swal.fire({ icon: 'warning', title: 'Lengkapi Form', text: 'Pilih fakultas.' });
+        return false;
+      }
+      if (!this.data.amount || Number(this.data.amount) <= 0) {
+        Swal.fire({ icon: 'warning', title: 'Lengkapi Form', text: 'Masukkan nominal donasi.' });
+        return false;
+      }
+      return true;
+    },
     async handleSubmit() {
+      if (!this.validate()) return;
       this.isLoading = true;
       try {
-        const payload = {
-          data: { ...this.data },
-        };
-        await this.store.dispatch(POST_DONATION, payload);
-        document.body.classList.remove('no-scroll');
-        Swal.fire({
-          title: 'Berhasil!',
-          text: 'Data berhasil dikirimkan successfully.',
-          icon: 'success',
-          confirmButtonColor: '#7066e0',
-          confirmButtonText: 'OK'
-        }).then(() => {
-          window.location.reload();
-        });
-        this.isLoading = false;
-        this.closeModal();
+        if (this.data.paymentMethod === 'Online (Midtrans)') {
+          await this.payWithMidtrans();
+        } else {
+          await this.submitManual();
+        }
       } catch (error) {
+        console.error(error);
         Swal.fire({
           title: 'Error!',
           text: 'Data gagal dikirim.',
@@ -154,9 +274,58 @@ export default {
           confirmButtonColor: '#7066e0',
           confirmButtonText: 'Coba lagi'
         });
+      } finally {
         this.isLoading = false;
       }
-    }
+    },
+    async submitManual() {
+      const payload = { ...this.buildPayload(), proof: this.data.proof };
+      await this.store.dispatch(POST_DONATION, { data: payload });
+      document.body.classList.remove('no-scroll');
+      await Swal.fire({
+        title: 'Berhasil!',
+        text: 'Data donasi berhasil dikirim.',
+        icon: 'success',
+        confirmButtonColor: '#7066e0',
+        confirmButtonText: 'OK'
+      });
+      window.location.reload();
+    },
+    async payWithMidtrans() {
+      if (typeof window === 'undefined' || !window.snap) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Midtrans belum siap',
+          text: 'Snap.js belum termuat. Silakan refresh halaman dan coba lagi.'
+        });
+        return;
+      }
+      const result = await this.store.dispatch(POST_DONATION_SNAP, { data: this.buildPayload() });
+      const token = result && (result.token || (result.data && result.data.token));
+      if (!token) throw new Error("Snap token tidak tersedia");
+
+      await new Promise((resolve) => {
+        window.snap.pay(token, {
+          onSuccess: () => {
+            Swal.fire({ icon: 'success', title: 'Pembayaran berhasil', text: 'Terima kasih atas donasi Anda.' })
+              .then(() => { window.location.reload(); });
+            resolve();
+          },
+          onPending: () => {
+            Swal.fire({ icon: 'info', title: 'Menunggu pembayaran', text: 'Transaksi Anda sedang diproses.' })
+              .then(() => { window.location.reload(); });
+            resolve();
+          },
+          onError: () => {
+            Swal.fire({ icon: 'error', title: 'Pembayaran gagal', text: 'Silakan coba lagi.' });
+            resolve();
+          },
+          onClose: () => {
+            resolve();
+          },
+        });
+      });
+    },
   },
   watch: {
     data: {

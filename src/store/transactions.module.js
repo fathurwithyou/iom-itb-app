@@ -5,6 +5,7 @@ export const SET_TRANSACTIONS = "setTransactions";
 export const GET_TRANSACTION_DETAIL = "getTransactionDetail";
 export const SET_TRANSACTION_DETAIL = "setTransactionDetail";
 export const POST_TRANSACTION = "postTransaction";
+export const POST_TRANSACTION_SNAP = "postTransactionSnap";
 export const PUT_TRANSACTION = "putTransaction";
 export const DELETE_TRANSACTION = "deleteTransaction";
 
@@ -54,6 +55,17 @@ const actions = {
     [POST_TRANSACTION](context, params){
         return new Promise((resolve, reject) => {
             ApiService.post("/transactions", params.data)
+                .then(({ data }) => {
+                    resolve(data);
+                })
+                .catch(err => {
+                    reject(err);
+                });
+        });
+    },
+    [POST_TRANSACTION_SNAP](context, params){
+        return new Promise((resolve, reject) => {
+            ApiService.post("/payments/snap-token", { type: "transaction", payload: params.data })
                 .then(({ data }) => {
                     resolve(data);
                 })

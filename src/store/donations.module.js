@@ -4,6 +4,7 @@ import ApiService from "./api.service";
 export const GET_DONATIONS = "getDonations";
 export const SET_DONATIONS = "setDonations";
 export const POST_DONATION = "postDonation";
+export const POST_DONATION_SNAP = "postDonationSnap";
 export const PUT_DONATION = "putDonation";
 export const DELETE_DONATION = "deleteDonation";
 
@@ -35,9 +36,19 @@ const actions = {
         });
     },
     [POST_DONATION](context, params) {
-        console.log('testt')
         return new Promise((resolve, reject) => {
             ApiService.post("/donations", params.data)
+                .then(({ data }) => {
+                    resolve(data);
+                })
+                .catch(err => {
+                    reject(err);
+                });
+        });
+    },
+    [POST_DONATION_SNAP](context, params) {
+        return new Promise((resolve, reject) => {
+            ApiService.post("/payments/snap-token", { type: "donation", payload: params.data })
                 .then(({ data }) => {
                     resolve(data);
                 })

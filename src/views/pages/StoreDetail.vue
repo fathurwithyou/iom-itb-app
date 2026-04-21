@@ -111,13 +111,33 @@
 
       <div class="mb-4">
         <label class="block text-sm font-medium text-gray-700">
+          Metode Pembayaran <span class="text-red-500">*</span>
+        </label>
+        <select
+          v-model="paymentMethod"
+          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-main focus:border-main sm:text-sm"
+        >
+          <option value="manual">Manual (Transfer Bank)</option>
+          <option value="midtrans">Online (Midtrans)</option>
+        </select>
+        <span class="block text-sm font-medium text-gray-500 mt-2">
+          Total Pembayaran: {{ formatPrice(quantity * currentMerchandise.price) }}
+        </span>
+      </div>
+
+      <div v-if="paymentMethod === 'midtrans'" class="mb-4 bg-blue-50 border border-blue-200 p-4 rounded">
+        <p class="text-sm text-gray-700">
+          Setelah menekan <strong>Pesan Sekarang</strong>, jendela pembayaran Midtrans akan terbuka.
+          Anda dapat membayar dengan kartu kredit, transfer bank, e-wallet, atau QRIS.
+        </p>
+      </div>
+
+      <div v-else class="mb-4">
+        <label class="block text-sm font-medium text-gray-700">
           Upload Bukti Pembayaran <span class="text-red-500">*</span>
         </label>
         <span class="block text-sm font-medium text-gray-500">
           No Rek. 12345678 a/n. suka (BCA)
-        </span>
-        <span class="block text-sm font-medium text-gray-500">
-          Total Pembayaran: {{ formatPrice(quantity * currentMerchandise.price) }}
         </span>
 
         <input
@@ -126,7 +146,6 @@
           name="file"
           id="payment"
           @change="onChange"
-          required
           class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-main focus:border-main sm:text-sm hidden"
         />
 
@@ -175,8 +194,7 @@
 
 <script>
 import { GET_MERCHANDISE_DETAIL } from "@/store/merchandises.module";
-import { POST_TRANSACTION } from "@/store/transactions.module";
-import { error } from "jquery";
+import { POST_TRANSACTION, POST_TRANSACTION_SNAP } from "@/store/transactions.module";
 import Swal from 'sweetalert2';
 
 export default {
@@ -191,7 +209,8 @@ export default {
       },
       file: [],
       payment: "",
-      isDragging: false, // Track if a file is being dragged over
+      paymentMethod: "manual",
+      isDragging: false,
       errors: {
         quantity: "",
         name: "",
@@ -321,16 +340,13 @@ export default {
         return;
       }
 
-      const formData = {
-        data: {
-          merchandiseId: this.currentMerchandise.id,
-          username: this.userInfo.name,
-          email: this.userInfo.email,
-          noTelp: this.userInfo.noTelp,
-          address: this.userInfo.address,
-          qty: Number(this.quantity),
-          payment: this.payment,
-        },
+      const basePayload = {
+        merchandiseId: this.currentMerchandise.id,
+        username: this.userInfo.name,
+        email: this.userInfo.email,
+        noTelp: this.userInfo.noTelp,
+        address: this.userInfo.address,
+        qty: Number(this.quantity),
       };
 
       const confirmCheckout = await Swal.fire({
@@ -343,9 +359,15 @@ export default {
         confirmButtonText: 'Yes, proceed!',
       });
 
-      if (confirmCheckout.isConfirmed) {
-        try {
-          const response = await this.$store.dispatch(POST_TRANSACTION, formData);
+      if (!confirmCheckout.isConfirmed) return;
+
+      try {
+        if (this.paymentMethod === "midtrans") {
+          await this.payWithMidtrans(basePayload);
+        } else {
+          const response = await this.$store.dispatch(POST_TRANSACTION, {
+            data: { ...basePayload, payment: this.payment },
+          });
           await Swal.fire({
             title: "Checkout!",
             text: "Your item has been checked out.",
@@ -353,15 +375,56 @@ export default {
             confirmButtonText: "OK",
           });
           window.location.href = `/transaction?q=${response?.data?.code}`;
-        } catch (error) {
-          await Swal.fire({
-            title: "Error!",
-            text: "There was a problem with your transaction.",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
         }
+      } catch (err) {
+        console.error(err);
+        await Swal.fire({
+          title: "Error!",
+          text: "There was a problem with your transaction.",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
       }
+    },
+    async payWithMidtrans(basePayload) {
+      if (typeof window === "undefined" || !window.snap) {
+        await Swal.fire({
+          icon: "error",
+          title: "Midtrans belum siap",
+          text: "Snap.js belum termuat. Silakan refresh halaman dan coba lagi.",
+        });
+        return;
+      }
+      const result = await this.$store.dispatch(POST_TRANSACTION_SNAP, { data: basePayload });
+      const token = result && (result.token || (result.data && result.data.token));
+      const code = result && (result.code || (result.data && result.data.code));
+      if (!token) throw new Error("Snap token tidak tersedia");
+
+      await new Promise((resolve) => {
+        window.snap.pay(token, {
+          onSuccess: () => {
+            Swal.fire({ icon: "success", title: "Pembayaran berhasil", text: "Terima kasih!" })
+              .then(() => {
+                if (code) window.location.href = `/transaction?q=${code}`;
+                else window.location.reload();
+              });
+            resolve();
+          },
+          onPending: () => {
+            Swal.fire({ icon: "info", title: "Menunggu pembayaran", text: "Transaksi sedang diproses." })
+              .then(() => {
+                if (code) window.location.href = `/transaction?q=${code}`;
+                else window.location.reload();
+              });
+            resolve();
+          },
+          onError: () => {
+            Swal.fire({ icon: "error", title: "Pembayaran gagal", text: "Silakan coba lagi." });
+            resolve();
+          },
+          onClose: () => resolve(),
+        });
+      });
     },
     clearErrors() {
       this.errors = {
@@ -449,7 +512,7 @@ export default {
         isValid = false;
       }
 
-      if (!this.payment) {
+      if (this.paymentMethod === "manual" && !this.payment) {
         this.errors.payment = "Bukti pembayaran wajib diunggah.";
         isValid = false;
       }

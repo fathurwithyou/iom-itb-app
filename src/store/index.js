@@ -6,6 +6,7 @@ import donations from "./donations.module";
 import helpSubmissions from "./helpSubmissions.module";
 import transactions from "./transactions.module";
 import members from "./members.module";
+import faculties from "./faculties.module";
 
 export default createStore({
   state() {
@@ -26,6 +27,7 @@ export default createStore({
     donations,
     helpSubmissions,
     transactions,
-    members
+    members,
+    faculties,
   },
 });
