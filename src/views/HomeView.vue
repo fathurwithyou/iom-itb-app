@@ -5,7 +5,7 @@
   <div class="bg-white">
     <h2 class="text-main font-[800] text-[32px] md:text-[50px] text-center leading-tight md:leading-[65.1px] py-[16px]">Tentang Kami</h2>
     <div class="flex flex-col md:flex-row justify-between items-center">
-      <img :src="require('@/assets/image/iom-itb.png')" alt="IOM-ITB" class="w-full md:w-1/2 object-cover p-4 md:p-20">
+      <img :src="require('@/assets/icon/icon.jpeg')" alt="IOM-ITB" class="w-full md:w-1/2 object-cover p-4 md:p-20">
       <div class="w-full md:w-[45%] bg-main rounded-l-[50px] py-[40px] md:py-[61px] px-[30px] md:px-[70px]">
         <h4 class="text-[24px] md:text-[26px] capitalize text-white font-[700]">Ikatan Orang Tua Mahasiswa</h4>
         <h5 class="text-[18px] md:text-[20px] capitalize text-white font-[600]">Institut Teknologi Bandung</h5>

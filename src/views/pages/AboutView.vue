@@ -16,7 +16,7 @@
         {{ goals }}
         </p>
       </div>
-      <img :src="require('@/assets/image/iom-itb.png')" alt="IOM-ITB" class="w-full md:w-1/2 object-cover p-4 md:p-20 hidden md:block">
+      <img :src="require('@/assets/icon/icon.jpeg')" alt="IOM-ITB" class="w-full md:w-1/2 object-cover p-4 md:p-20 hidden md:block">
     </div>
   </div>
 
