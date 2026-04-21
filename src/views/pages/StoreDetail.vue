@@ -196,6 +196,7 @@
 import { GET_MERCHANDISE_DETAIL } from "@/store/merchandises.module";
 import { POST_TRANSACTION, POST_TRANSACTION_SNAP } from "@/store/transactions.module";
 import Swal from 'sweetalert2';
+import { savePendingPayment, removePendingPayment } from "@/utils/pendingPayments";
 
 export default {
   data() {
@@ -396,14 +397,31 @@ export default {
         return;
       }
       const result = await this.$store.dispatch(POST_TRANSACTION_SNAP, { data: basePayload });
-      const token = result && (result.token || (result.data && result.data.token));
-      const code = result && (result.code || (result.data && result.data.code));
+      const payload = (result && result.data) || result || {};
+      const token = payload.token;
+      const orderId = payload.orderId;
+      const code = payload.code;
       if (!token) throw new Error("Snap token tidak tersedia");
+
+      const grossAmount = Number(this.currentMerchandise?.price || 0) * Number(basePayload.qty || 0);
+      if (orderId) {
+        savePendingPayment({
+          orderId,
+          token,
+          type: 'transaction',
+          amount: grossAmount,
+          label: `Pembelian — ${this.currentMerchandise?.name || 'Merchandise'}`,
+          code,
+        });
+        window.dispatchEvent(new Event('iom:pending-updated'));
+      }
 
       await new Promise((resolve) => {
         window.snap.pay(token, {
           onSuccess: () => {
-            Swal.fire({ icon: "success", title: "Pembayaran berhasil", text: "Terima kasih!" })
+            if (orderId) removePendingPayment(orderId);
+            window.dispatchEvent(new Event('iom:pending-updated'));
+            Swal.fire({ icon: "success", title: "Pembayaran berhasil", text: "Terima kasih! Invoice telah dikirim ke email Anda." })
               .then(() => {
                 if (code) window.location.href = `/transaction?q=${code}`;
                 else window.location.reload();
@@ -411,18 +429,17 @@ export default {
             resolve();
           },
           onPending: () => {
-            Swal.fire({ icon: "info", title: "Menunggu pembayaran", text: "Transaksi sedang diproses." })
-              .then(() => {
-                if (code) window.location.href = `/transaction?q=${code}`;
-                else window.location.reload();
-              });
+            Swal.fire({ icon: "info", title: "Menunggu pembayaran", text: "Transaksi sedang diproses. Anda bisa melanjutkan pembayaran kapan saja melalui banner di pojok kanan bawah." });
             resolve();
           },
           onError: () => {
-            Swal.fire({ icon: "error", title: "Pembayaran gagal", text: "Silakan coba lagi." });
+            Swal.fire({ icon: "error", title: "Pembayaran gagal", text: "Silakan coba lagi melalui banner di pojok kanan bawah." });
             resolve();
           },
-          onClose: () => resolve(),
+          onClose: () => {
+            Swal.fire({ icon: "info", title: "Pembayaran ditunda", text: 'Jangan khawatir, pesanan Anda tersimpan. Klik "Lanjutkan" pada banner di pojok kanan bawah untuk melanjutkan.' });
+            resolve();
+          },
         });
       });
     },

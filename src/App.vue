@@ -5,12 +5,15 @@
     }}</template>
   </metainfo>
   <router-view />
+  <PendingPaymentBanner />
 </template>
 
 <script>
+import PendingPaymentBanner from "@/components/PendingPaymentBanner.vue";
+
 export default {
   name: "App",
-  components: {},
+  components: { PendingPaymentBanner },
 };
 </script>
 

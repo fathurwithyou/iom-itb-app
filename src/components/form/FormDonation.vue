@@ -146,6 +146,7 @@ import { useStore } from 'vuex';
 import Swal from 'sweetalert2';
 import { POST_DONATION, POST_DONATION_SNAP } from "@/store/donations.module";
 import { GET_FACULTIES } from "@/store/faculties.module";
+import { savePendingPayment, removePendingPayment } from "@/utils/pendingPayments";
 
 const DONATION_TYPES = [
   { value: 'iuran_sukarela', label: 'Iuran Sukarela' },
@@ -377,26 +378,42 @@ export default {
         return;
       }
       const result = await this.store.dispatch(POST_DONATION_SNAP, { data: this.buildPayload() });
-      const token = result && (result.token || (result.data && result.data.token));
+      const payload = (result && result.data) || result || {};
+      const token = payload.token;
+      const orderId = payload.orderId;
       if (!token) throw new Error("Snap token tidak tersedia");
+
+      const amount = Number(this.data.amount) || 0;
+      if (orderId) {
+        savePendingPayment({
+          orderId,
+          token,
+          type: 'donation',
+          amount,
+          label: `Donasi — ${this.donationTypeLabel || this.data.donationType}`,
+        });
+        window.dispatchEvent(new Event('iom:pending-updated'));
+      }
 
       await new Promise((resolve) => {
         window.snap.pay(token, {
           onSuccess: () => {
-            Swal.fire({ icon: 'success', title: 'Pembayaran berhasil', text: 'Terima kasih atas donasi Anda.' })
+            if (orderId) removePendingPayment(orderId);
+            window.dispatchEvent(new Event('iom:pending-updated'));
+            Swal.fire({ icon: 'success', title: 'Pembayaran berhasil', text: 'Terima kasih atas donasi Anda. Invoice telah dikirim ke email Anda.' })
               .then(() => { window.location.reload(); });
             resolve();
           },
           onPending: () => {
-            Swal.fire({ icon: 'info', title: 'Menunggu pembayaran', text: 'Transaksi Anda sedang diproses.' })
-              .then(() => { window.location.reload(); });
+            Swal.fire({ icon: 'info', title: 'Menunggu pembayaran', text: 'Transaksi Anda sedang diproses. Anda bisa melanjutkan pembayaran kapan saja melalui banner di pojok kanan bawah.' });
             resolve();
           },
           onError: () => {
-            Swal.fire({ icon: 'error', title: 'Pembayaran gagal', text: 'Silakan coba lagi.' });
+            Swal.fire({ icon: 'error', title: 'Pembayaran gagal', text: 'Silakan coba lagi melalui banner di pojok kanan bawah.' });
             resolve();
           },
           onClose: () => {
+            Swal.fire({ icon: 'info', title: 'Pembayaran ditunda', text: 'Jangan khawatir, pesanan Anda tersimpan. Klik "Lanjutkan" pada banner di pojok kanan bawah untuk melanjutkan.' });
             resolve();
           },
         });
