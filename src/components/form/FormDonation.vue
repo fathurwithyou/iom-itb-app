@@ -14,7 +14,23 @@
             <InputText keyValue="email" label="Email" class="w-full md:w-1/2" :required="true" @update="updateValue" />
           </div>
           <div class="flex flex-col md:flex-row md:justify-between gap-4 mt-4">
-            <InputText keyValue="noWhatsapp" label="No Whatsapp" class="w-full md:w-1/2" :required="true" @update="updateValue" />
+            <div class="w-full md:w-1/2">
+              <label class="block text-sm font-medium mb-1">No Whatsapp <span class="text-red-500">*</span></label>
+              <div class="flex gap-2">
+                <select v-model="dialCode" class="border rounded-md px-2 py-2 bg-white text-sm w-[110px]">
+                  <option v-for="c in dialCodes" :key="c.code" :value="c.code">{{ c.flag }} {{ c.code }}</option>
+                </select>
+                <input
+                  type="tel"
+                  inputmode="numeric"
+                  v-model="localPhone"
+                  @input="onPhoneInput"
+                  placeholder="81234567890"
+                  class="flex-1 border rounded-md px-3 py-2 text-sm"
+                />
+              </div>
+              <p class="text-xs text-gray-500 mt-1">Tanpa angka 0 di depan. Contoh: 81234567890</p>
+            </div>
             <div class="hidden md:block md:w-1/2"></div>
           </div>
 
@@ -171,6 +187,21 @@ export default {
         proof: null,
         notification: {},
       },
+      dialCode: "+62",
+      localPhone: "",
+      dialCodes: [
+        { code: "+62", flag: "🇮🇩" },
+        { code: "+60", flag: "🇲🇾" },
+        { code: "+65", flag: "🇸🇬" },
+        { code: "+66", flag: "🇹🇭" },
+        { code: "+63", flag: "🇵🇭" },
+        { code: "+61", flag: "🇦🇺" },
+        { code: "+81", flag: "🇯🇵" },
+        { code: "+82", flag: "🇰🇷" },
+        { code: "+86", flag: "🇨🇳" },
+        { code: "+1", flag: "🇺🇸" },
+        { code: "+44", flag: "🇬🇧" },
+      ],
       donationTypeLabel: "",
       facultyLabel: "",
     };
@@ -211,6 +242,11 @@ export default {
       console.error("Failed to load faculties", err);
     }
   },
+  watch: {
+    dialCode(newCode) {
+      this.data.noWhatsapp = this.localPhone ? `${newCode}${this.localPhone}` : '';
+    },
+  },
   methods: {
     closeModal() {
       this.isLoading = false;
@@ -219,6 +255,11 @@ export default {
     },
     updateValue({ key, value }) {
       this.data[key] = value;
+    },
+    onPhoneInput(e) {
+      const digits = String(e.target.value || '').replace(/\D/g, '').replace(/^0+/, '');
+      this.localPhone = digits;
+      this.data.noWhatsapp = digits ? `${this.dialCode}${digits}` : '';
     },
     onDonationTypeChange({ value }) {
       this.donationTypeLabel = value;
@@ -230,11 +271,15 @@ export default {
       const match = this.facultiesList.find(f => `${f.name} (${f.kodeUnik})` === value);
       this.data.facultyId = match ? match.id : null;
     },
+    fullPhone() {
+      const digits = String(this.localPhone || '').replace(/\D/g, '');
+      return digits ? `${this.dialCode}${digits}` : '';
+    },
     buildPayload() {
       return {
         name: this.data.name,
         email: this.data.email,
-        noWhatsapp: this.data.noWhatsapp,
+        noWhatsapp: this.fullPhone(),
         amount: Number(this.data.amount) || 0,
         donationType: this.data.donationType,
         facultyId: this.data.facultyId,
@@ -254,6 +299,25 @@ export default {
         Swal.fire({ icon: 'warning', title: 'Lengkapi Form', text: 'Masukkan nominal donasi.' });
         return false;
       }
+
+      const local = (this.localPhone || '').trim();
+      if (!local) {
+        Swal.fire({ icon: 'warning', title: 'Lengkapi Form', text: 'Nomor WhatsApp wajib diisi.' });
+        return false;
+      }
+      if (!/^\d+$/.test(local)) {
+        Swal.fire({ icon: 'warning', title: 'Nomor Tidak Valid', text: 'Nomor WhatsApp hanya boleh berisi angka.' });
+        return false;
+      }
+      if (this.dialCode === '+62' && !/^8/.test(local)) {
+        Swal.fire({ icon: 'warning', title: 'Nomor Tidak Valid', text: 'Nomor WhatsApp Indonesia harus diawali angka 8 (contoh: 81234567890). Tanpa 0 di depan.' });
+        return false;
+      }
+      if (local.length < 8 || local.length > 13) {
+        Swal.fire({ icon: 'warning', title: 'Nomor Tidak Valid', text: 'Panjang nomor WhatsApp harus 8–13 digit (contoh: 81234567890).' });
+        return false;
+      }
+
       if (this.data.paymentMethod === 'Online (Midtrans)') {
         const email = (this.data.email || '').trim();
         if (!email) {
