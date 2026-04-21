@@ -63,6 +63,14 @@ const ApiService = {
     });
   },
 
+  postJson(resource, params) {
+    return this.api1.post(`${resource}`, params, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  },
+
   upload(resource, params) {
     let formData = new FormData();
     formData.append("file", params);

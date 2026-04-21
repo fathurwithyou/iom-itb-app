@@ -48,7 +48,7 @@ const actions = {
     },
     [POST_DONATION_SNAP](context, params) {
         return new Promise((resolve, reject) => {
-            ApiService.post("/payments/snap-token", { type: "donation", payload: params.data })
+            ApiService.postJson("/payments/snap-token", { type: "donation", payload: params.data })
                 .then(({ data }) => {
                     resolve(data);
                 })
