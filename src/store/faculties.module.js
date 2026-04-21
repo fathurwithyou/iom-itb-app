@@ -18,7 +18,8 @@ const actions = {
         return new Promise((resolve, reject) => {
             ApiService.get("/faculties")
                 .then((response) => {
-                    const list = (response && response.data) || [];
+                    const body = response && response.data;
+                    const list = Array.isArray(body) ? body : (body && body.data) || [];
                     commit(SET_FACULTIES, list);
                     resolve(list);
                 })
