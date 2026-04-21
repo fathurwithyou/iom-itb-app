@@ -59,7 +59,7 @@
 
   <div class="bg-white py-[24px] px-[18px] md:px-[70px]">
     <div class="flex flex-col md:flex-row justify-between items-center">
-      <img :src="require('@/assets/icon/icon.jpeg')" alt="IOM-ITB" class="w-full md:w-1/2 object-cover p-4 md:p-20">
+      <img :src="require('@/assets/image/IOM-ITB-PrimaryLogo-blue.png')" alt="IOM-ITB" class="w-full md:w-1/2 object-cover p-4 md:p-20">
       <div class="w-full md:w-1/2 text-justify p-4 md:p-0">
         <h4 class="text-[24px] md:text-[50px] capitalize text-main font-[700]">Berdonasi Bersama IOM-ITB</h4>
         <p class="font-[500] text-[14px] md:text-[16px] text-main whitespace-pre-line">

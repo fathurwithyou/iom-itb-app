@@ -4,7 +4,7 @@
       <div class="flex flex-wrap">
         <div class="w-full md:w-1/2 lg:w-1/3 xl:w-1/4 pr-10">
           <div class="flex items-center mb-4">
-            <img :src="require('@/assets/icon/icon.jpeg')" alt="IOM-ITB" class="w-[100px] mr-4">
+            <img :src="require('@/assets/image/IOM-ITB-PrimaryLogo-blue.png')" alt="IOM-ITB" class="w-[100px] mr-4">
             <div>
               <p class="text-lg font-bold leading-tight">Ikatan Orang Tua Mahasiswa</p>
               <p class="text-sm leading-tight">Institut Teknologi Bandung</p>
