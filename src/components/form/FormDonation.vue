@@ -254,6 +254,18 @@ export default {
         Swal.fire({ icon: 'warning', title: 'Lengkapi Form', text: 'Masukkan nominal donasi.' });
         return false;
       }
+      if (this.data.paymentMethod === 'Online (Midtrans)') {
+        const email = (this.data.email || '').trim();
+        if (!email) {
+          Swal.fire({ icon: 'warning', title: 'Lengkapi Form', text: 'Email wajib diisi untuk pembayaran Midtrans (invoice akan dikirim ke email ini).' });
+          return false;
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          Swal.fire({ icon: 'warning', title: 'Email Tidak Valid', text: 'Masukkan alamat email yang valid (contoh: nama@email.com).' });
+          return false;
+        }
+      }
       return true;
     },
     async handleSubmit() {
