@@ -123,6 +123,11 @@
             <InputCheckboxOptions keyValue="notification" label="Menerima notifikasi melalui?" class="w-full md:w-1/2" :required="true" :options="['Whatsapp', 'Email']" @update="updateValue" />
           </div>
 
+          <div class="flex flex-col md:flex-row md:justify-between gap-4 mt-4">
+            <InputCheckbox keyValue="nameIsHidden" label="Sembunyikan Nama (Anonim)" class="w-full md:w-1/2" @update="updateValue" />
+            <InputCheckbox keyValue="isHambaAllah" label="Hamba Allah" class="w-full md:w-1/2" @update="updateValue" />
+          </div>
+
           <div class="flex flex-col-reverse md:flex-row justify-end gap-4 mt-6">
             <button type="button" @click="closeModal" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none w-full md:w-auto">
               Cancel
@@ -140,6 +145,7 @@
 <script>
 import InputText from "@/components/input/InputText.vue";
 import InputSelection from "@/components/input/InputSelection.vue";
+import InputCheckbox from "@/components/input/InputCheckbox.vue";
 import InputCheckboxOptions from "@/components/input/InputCheckboxOptions.vue";
 import InputFile from "@/components/input/InputFile.vue";
 import { useStore } from 'vuex';
@@ -160,6 +166,7 @@ const DONATION_TYPES = [
 export default {
   components: {
     InputText,
+    InputCheckbox,
     InputCheckboxOptions,
     InputFile,
     InputSelection,
@@ -188,6 +195,8 @@ export default {
         paymentMethod: this.mode === "midtrans" ? "Online (Midtrans)" : "Manual (Transfer Bank)",
         proof: null,
         notification: {},
+        nameIsHidden: false,
+        isHambaAllah: false,
       },
       dialCode: "+62",
       localPhone: "",
@@ -286,6 +295,8 @@ export default {
         donationType: this.data.donationType,
         facultyId: this.data.facultyId,
         notification: this.data.notification,
+        nameIsHidden: this.data.nameIsHidden,
+        isHambaAllah: this.data.isHambaAllah,
       };
     },
     validate() {
