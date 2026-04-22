@@ -147,6 +147,7 @@ import Swal from 'sweetalert2';
 import { POST_DONATION, POST_DONATION_SNAP } from "@/store/donations.module";
 import { GET_FACULTIES } from "@/store/faculties.module";
 import { savePendingPayment, removePendingPayment } from "@/utils/pendingPayments";
+import ApiService from "@/store/api.service";
 
 const DONATION_TYPES = [
   { value: 'iuran_sukarela', label: 'Iuran Sukarela' },
@@ -400,7 +401,8 @@ export default {
           onSuccess: () => {
             if (orderId) removePendingPayment(orderId);
             window.dispatchEvent(new Event('iom:pending-updated'));
-            Swal.fire({ icon: 'success', title: 'Pembayaran berhasil', text: 'Terima kasih atas donasi Anda. Invoice telah dikirim ke email Anda.' })
+            ApiService.postJson('/payments/verify', { orderId }).catch(() => {});
+            Swal.fire({ icon: 'success', title: 'Pembayaran berhasil', text: 'Terima kasih atas donasi Anda. Notifikasi telah dikirim ke WhatsApp Anda.' })
               .then(() => { window.location.reload(); });
             resolve();
           },

@@ -197,6 +197,7 @@ import { GET_MERCHANDISE_DETAIL } from "@/store/merchandises.module";
 import { POST_TRANSACTION, POST_TRANSACTION_SNAP } from "@/store/transactions.module";
 import Swal from 'sweetalert2';
 import { savePendingPayment, removePendingPayment } from "@/utils/pendingPayments";
+import ApiService from "@/store/api.service";
 
 export default {
   data() {
@@ -421,7 +422,8 @@ export default {
           onSuccess: () => {
             if (orderId) removePendingPayment(orderId);
             window.dispatchEvent(new Event('iom:pending-updated'));
-            Swal.fire({ icon: "success", title: "Pembayaran berhasil", text: "Terima kasih! Invoice telah dikirim ke email Anda." })
+            ApiService.postJson('/payments/verify', { orderId }).catch(() => {});
+            Swal.fire({ icon: "success", title: "Pembayaran berhasil", text: "Terima kasih! Notifikasi telah dikirim ke WhatsApp Anda." })
               .then(() => {
                 if (code) window.location.href = `/transaction?q=${code}`;
                 else window.location.reload();
