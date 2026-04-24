@@ -413,7 +413,7 @@ export default {
             if (orderId) removePendingPayment(orderId);
             window.dispatchEvent(new Event('iom:pending-updated'));
             ApiService.postJson('/payments/verify', { orderId }).catch(() => {});
-            Swal.fire({ icon: 'success', title: 'Pembayaran berhasil', text: 'Terima kasih atas donasi Anda. Notifikasi telah dikirim ke WhatsApp Anda.' })
+            Swal.fire({ icon: 'success', title: 'Pembayaran berhasil', text: 'Terima kasih atas donasi Anda. Notifikasi telah dikirim ke WhatsApp/Email Anda.' })
               .then(() => { window.location.reload(); });
             resolve();
           },
