@@ -1,5 +1,6 @@
 import ApiService from "@/store/api.service";
 import { removePendingPayment } from "@/utils/pendingPayments";
+import { isNotStartedPaymentSession } from "@/utils/paymentSessionState";
 
 const TERMINAL_PAYMENT_STATUSES = new Set(["settlement", "failed", "expired", "refunded"]);
 
@@ -45,7 +46,7 @@ export const cancelPayment = async (orderId) => {
   const response = await ApiService.postJson("/payments/cancel", { orderId });
   const result = normalizeResponse(response);
 
-  if (isTerminalPaymentStatus(result.paymentStatus) || result.gatewayState === "not_started") {
+  if (isTerminalPaymentStatus(result.paymentStatus) || isNotStartedPaymentSession(result.paymentSessionState)) {
     removePendingPayment(orderId);
     window.dispatchEvent(new Event("iom:pending-updated"));
   }

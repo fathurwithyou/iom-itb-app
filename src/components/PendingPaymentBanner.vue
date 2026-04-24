@@ -70,6 +70,7 @@
 import Swal from 'sweetalert2';
 import { getPendingPayments, removePendingPayment } from '@/utils/pendingPayments';
 import { cancelPayment, syncPaymentStatus, isTerminalPaymentStatus } from '@/utils/midtransPayment';
+import { isNotStartedPaymentSession } from '@/utils/paymentSessionState';
 
 export default {
   name: 'PendingPaymentBanner',
@@ -132,7 +133,7 @@ export default {
       this.cancelingOrderId = orderId;
       try {
         const result = await cancelPayment(orderId);
-        if (result?.gatewayState === 'not_started') {
+        if (isNotStartedPaymentSession(result?.paymentSessionState)) {
           await Swal.fire({
             icon: 'info',
             title: 'Pengingat dihapus',

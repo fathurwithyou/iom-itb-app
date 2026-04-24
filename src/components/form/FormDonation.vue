@@ -154,7 +154,8 @@ import { POST_DONATION, POST_DONATION_SNAP } from "@/store/donations.module";
 import { GET_FACULTIES } from "@/store/faculties.module";
 import { savePendingPayment, removePendingPayment } from "@/utils/pendingPayments";
 import { prettifyDonationType, describeNotificationChannels } from "@/utils/donationLabels";
-import { syncPaymentStatus } from "@/utils/midtransPayment";
+import { syncPaymentStatus, isTerminalPaymentStatus } from "@/utils/midtransPayment";
+import { isNotStartedPaymentSession } from "@/utils/paymentSessionState";
 
 const successLogo = require('@/assets/image/IOM-ITB-PrimaryLogo-blue.png');
 
@@ -449,9 +450,12 @@ export default {
           },
           onError: async () => {
             const result = await syncPaymentStatus(orderId).catch(() => null);
-            const isCanceled = ['failed', 'expired', 'refunded'].includes(result?.paymentStatus);
+            const isNotStarted = isNotStartedPaymentSession(result?.paymentSessionState);
+            const isCanceled = isTerminalPaymentStatus(result?.paymentStatus);
             Swal.fire(
-              isCanceled
+              isNotStarted
+                ? { icon: 'info', title: 'Pembayaran belum dimulai', text: 'Anda belum memilih metode pembayaran. Anda bisa melanjutkannya lagi dari banner di pojok kanan bawah.' }
+                : isCanceled
                 ? { icon: 'info', title: 'Pembayaran dibatalkan', text: 'Transaksi Anda telah dibatalkan.' }
                 : { icon: 'error', title: 'Pembayaran gagal', text: 'Silakan coba lagi melalui banner di pojok kanan bawah.' }
             );
@@ -459,9 +463,12 @@ export default {
           },
           onClose: async () => {
             const result = await syncPaymentStatus(orderId).catch(() => null);
-            const isCanceled = ['failed', 'expired', 'refunded'].includes(result?.paymentStatus);
+            const isNotStarted = isNotStartedPaymentSession(result?.paymentSessionState);
+            const isCanceled = isTerminalPaymentStatus(result?.paymentStatus);
             Swal.fire(
-              isCanceled
+              isNotStarted
+                ? { icon: 'info', title: 'Pembayaran belum dimulai', text: 'Anda belum memilih metode pembayaran. Klik "Lanjutkan" pada banner di pojok kanan bawah jika ingin melanjutkan.' }
+                : isCanceled
                 ? { icon: 'info', title: 'Pembayaran dibatalkan', text: 'Transaksi Anda telah dibatalkan.' }
                 : { icon: 'info', title: 'Pembayaran ditunda', text: 'Jangan khawatir, pesanan Anda tersimpan. Klik "Lanjutkan" pada banner di pojok kanan bawah untuk melanjutkan.' }
             );
