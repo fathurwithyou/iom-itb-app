@@ -199,6 +199,8 @@ import Swal from 'sweetalert2';
 import { savePendingPayment, removePendingPayment } from "@/utils/pendingPayments";
 import ApiService from "@/store/api.service";
 
+const successLogo = require('@/assets/image/IOM-ITB-PrimaryLogo-blue.png');
+
 export default {
   data() {
     return {
@@ -370,10 +372,19 @@ export default {
           const response = await this.$store.dispatch(POST_TRANSACTION, {
             data: { ...basePayload, payment: this.payment },
           });
+          const itemName = this.currentMerchandise?.name || 'Pesanan';
           await Swal.fire({
-            title: "Checkout!",
-            text: "Your item has been checked out.",
+            title: "Checkout Berhasil!",
+            html: `
+              <p>Pesanan <strong>${itemName}</strong> Anda telah kami terima.</p>
+              <p style="margin-top:8px;">Bukti pembayaran akan diverifikasi oleh tim IOM ITB.</p>
+              <p style="margin-top:8px;color:#6b7280;font-size:13px;">Konfirmasi akan dikirim ke WhatsApp dan Email Anda.</p>
+            `,
             icon: "success",
+            imageUrl: successLogo,
+            imageWidth: 120,
+            imageAlt: 'IOM ITB',
+            confirmButtonColor: '#7066e0',
             confirmButtonText: "OK",
           });
           window.location.href = `/transaction?q=${response?.data?.code}`;
@@ -423,11 +434,24 @@ export default {
             if (orderId) removePendingPayment(orderId);
             window.dispatchEvent(new Event('iom:pending-updated'));
             ApiService.postJson('/payments/verify', { orderId }).catch(() => {});
-            Swal.fire({ icon: "success", title: "Pembayaran berhasil", text: "Terima kasih! Notifikasi telah dikirim ke WhatsApp Anda." })
-              .then(() => {
-                if (code) window.location.href = `/transaction?q=${code}`;
-                else window.location.reload();
-              });
+            const itemName = this.currentMerchandise?.name || 'Pesanan';
+            const amountFormatted = Number(grossAmount).toLocaleString('id-ID');
+            Swal.fire({
+              icon: "success",
+              title: "Pembayaran Berhasil",
+              html: `
+                <p>Terima kasih atas pembelian <strong>${itemName}</strong> sebesar <strong>Rp ${amountFormatted}</strong>.</p>
+                <p style="margin-top:8px;">Pesanan Anda sedang kami proses.</p>
+                <p style="margin-top:8px;color:#6b7280;font-size:13px;">Konfirmasi pembayaran telah dikirim ke WhatsApp dan Email Anda.</p>
+              `,
+              imageUrl: successLogo,
+              imageWidth: 120,
+              imageAlt: 'IOM ITB',
+              confirmButtonColor: '#7066e0',
+            }).then(() => {
+              if (code) window.location.href = `/transaction?q=${code}`;
+              else window.location.reload();
+            });
             resolve();
           },
           onPending: () => {

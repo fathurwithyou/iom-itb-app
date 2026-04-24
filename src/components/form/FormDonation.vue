@@ -153,7 +153,10 @@ import Swal from 'sweetalert2';
 import { POST_DONATION, POST_DONATION_SNAP } from "@/store/donations.module";
 import { GET_FACULTIES } from "@/store/faculties.module";
 import { savePendingPayment, removePendingPayment } from "@/utils/pendingPayments";
+import { prettifyDonationType, describeNotificationChannels } from "@/utils/donationLabels";
 import ApiService from "@/store/api.service";
+
+const successLogo = require('@/assets/image/IOM-ITB-PrimaryLogo-blue.png');
 
 const DONATION_TYPES = [
   { value: 'iuran_sukarela', label: 'Iuran Sukarela' },
@@ -371,10 +374,19 @@ export default {
       const payload = { ...this.buildPayload(), proof: this.data.proof };
       await this.store.dispatch(POST_DONATION, { data: payload });
       document.body.classList.remove('no-scroll');
+      const donationLabel = prettifyDonationType(this.data.donationType);
+      const channels = describeNotificationChannels(this.data.notification);
       await Swal.fire({
-        title: 'Berhasil!',
-        text: 'Data donasi berhasil dikirim.',
+        title: 'Donasi Terkirim!',
+        html: `
+          <p>Terima kasih atas <strong>${donationLabel}</strong> Anda.</p>
+          <p style="margin-top:8px;">Bukti pembayaran akan kami verifikasi oleh tim IOM ITB.</p>
+          <p style="margin-top:8px;color:#6b7280;font-size:13px;">Konfirmasi akan dikirim ke ${channels}.</p>
+        `,
         icon: 'success',
+        imageUrl: successLogo,
+        imageWidth: 120,
+        imageAlt: 'IOM ITB',
         confirmButtonColor: '#7066e0',
         confirmButtonText: 'OK'
       });
@@ -396,16 +408,20 @@ export default {
       if (!token) throw new Error("Snap token tidak tersedia");
 
       const amount = Number(this.data.amount) || 0;
+      const donationLabel = prettifyDonationType(this.data.donationType);
       if (orderId) {
         savePendingPayment({
           orderId,
           token,
           type: 'donation',
           amount,
-          label: `Donasi — ${this.donationTypeLabel || this.data.donationType}`,
+          label: `Donasi — ${donationLabel}`,
         });
         window.dispatchEvent(new Event('iom:pending-updated'));
       }
+
+      const channels = describeNotificationChannels(this.data.notification);
+      const amountFormatted = Number(amount).toLocaleString('id-ID');
 
       await new Promise((resolve) => {
         window.snap.pay(token, {
@@ -413,8 +429,18 @@ export default {
             if (orderId) removePendingPayment(orderId);
             window.dispatchEvent(new Event('iom:pending-updated'));
             ApiService.postJson('/payments/verify', { orderId }).catch(() => {});
-            Swal.fire({ icon: 'success', title: 'Pembayaran berhasil', text: 'Terima kasih atas donasi Anda. Notifikasi telah dikirim ke WhatsApp/Email Anda.' })
-              .then(() => { window.location.reload(); });
+            Swal.fire({
+              icon: 'success',
+              title: 'Pembayaran Berhasil',
+              html: `
+                <p>Terima kasih atas <strong>${donationLabel}</strong> Anda sebesar <strong>Rp ${amountFormatted}</strong>.</p>
+                <p style="margin-top:8px;color:#6b7280;font-size:13px;">Konfirmasi pembayaran akan dikirim ke ${channels}.</p>
+              `,
+              imageUrl: successLogo,
+              imageWidth: 120,
+              imageAlt: 'IOM ITB',
+              confirmButtonColor: '#7066e0',
+            }).then(() => { window.location.reload(); });
             resolve();
           },
           onPending: () => {
