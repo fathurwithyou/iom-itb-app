@@ -197,7 +197,7 @@ import { GET_MERCHANDISE_DETAIL } from "@/store/merchandises.module";
 import { POST_TRANSACTION, POST_TRANSACTION_SNAP } from "@/store/transactions.module";
 import Swal from 'sweetalert2';
 import { savePendingPayment, removePendingPayment } from "@/utils/pendingPayments";
-import ApiService from "@/store/api.service";
+import { syncPaymentStatus } from "@/utils/midtransPayment";
 
 const successLogo = require('@/assets/image/IOM-ITB-PrimaryLogo-blue.png');
 
@@ -433,7 +433,7 @@ export default {
           onSuccess: () => {
             if (orderId) removePendingPayment(orderId);
             window.dispatchEvent(new Event('iom:pending-updated'));
-            ApiService.postJson('/payments/verify', { orderId }).catch(() => {});
+            syncPaymentStatus(orderId, { attempts: 1, removeWhenTerminal: false }).catch(() => {});
             const itemName = this.currentMerchandise?.name || 'Pesanan';
             const amountFormatted = Number(grossAmount).toLocaleString('id-ID');
             Swal.fire({
@@ -458,12 +458,24 @@ export default {
             Swal.fire({ icon: "info", title: "Menunggu pembayaran", text: "Transaksi sedang diproses. Anda bisa melanjutkan pembayaran kapan saja melalui banner di pojok kanan bawah." });
             resolve();
           },
-          onError: () => {
-            Swal.fire({ icon: "error", title: "Pembayaran gagal", text: "Silakan coba lagi melalui banner di pojok kanan bawah." });
+          onError: async () => {
+            const result = await syncPaymentStatus(orderId).catch(() => null);
+            const isCanceled = ['failed', 'expired', 'refunded'].includes(result?.paymentStatus);
+            Swal.fire(
+              isCanceled
+                ? { icon: "info", title: "Pembayaran dibatalkan", text: "Transaksi Anda telah dibatalkan." }
+                : { icon: "error", title: "Pembayaran gagal", text: "Silakan coba lagi melalui banner di pojok kanan bawah." }
+            );
             resolve();
           },
-          onClose: () => {
-            Swal.fire({ icon: "info", title: "Pembayaran ditunda", text: 'Jangan khawatir, pesanan Anda tersimpan. Klik "Lanjutkan" pada banner di pojok kanan bawah untuk melanjutkan.' });
+          onClose: async () => {
+            const result = await syncPaymentStatus(orderId).catch(() => null);
+            const isCanceled = ['failed', 'expired', 'refunded'].includes(result?.paymentStatus);
+            Swal.fire(
+              isCanceled
+                ? { icon: "info", title: "Pembayaran dibatalkan", text: "Transaksi Anda telah dibatalkan." }
+                : { icon: "info", title: "Pembayaran ditunda", text: 'Jangan khawatir, pesanan Anda tersimpan. Klik "Lanjutkan" pada banner di pojok kanan bawah untuk melanjutkan.' }
+            );
             resolve();
           },
         });

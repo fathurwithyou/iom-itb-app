@@ -5,34 +5,45 @@
       class="fixed bottom-4 right-4 left-4 md:left-auto md:right-6 md:bottom-6 z-[1000] max-w-md mx-auto md:mx-0 pointer-events-none"
     >
       <div
-        class="pointer-events-auto bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-400 rounded-xl shadow-2xl shadow-amber-200/50 overflow-hidden animate-pulse-border"
+        class="pointer-events-auto bg-white rounded-[24px] shadow-soft border border-[#E7ECF8] overflow-hidden"
       >
-        <div class="bg-amber-400 px-4 py-2 flex items-center gap-2">
-          <span class="relative flex h-3 w-3">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-          </span>
-          <span class="text-sm font-bold text-amber-900 uppercase tracking-wide">⚠️ Pembayaran Belum Selesai</span>
+        <div class="bg-[#F3F7FF] px-4 md:px-5 py-3 border-b border-[#E7ECF8]">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 min-w-[40px] rounded-full bg-main text-white flex items-center justify-center shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <p class="text-main text-[14px] md:text-[15px] font-[800] leading-tight">
+                Pembayaran Belum Selesai
+              </p>
+              <p class="text-main/70 text-[12px] md:text-[13px] leading-relaxed mt-1">
+                Transaksi Anda masih tersimpan dan bisa dilanjutkan kapan saja sebelum kadaluarsa.
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div class="p-4">
+        <div class="p-4 md:p-5 bg-white">
           <div v-for="p in pendingList" :key="p.orderId" class="mb-3 last:mb-0">
-            <div class="flex items-start justify-between gap-3">
+            <div class="flex items-start justify-between gap-3 rounded-[18px] border border-[#E7ECF8] bg-[#FAFCFF] p-3 md:p-4">
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-gray-800 truncate">{{ p.label || labelFor(p) }}</p>
-                <p class="text-xs text-gray-600 mt-0.5">
+                <p class="text-[14px] font-[700] text-main truncate">{{ p.label || labelFor(p) }}</p>
+                <p class="text-[12px] text-main/65 mt-1">
                   <span class="font-mono">{{ p.code || p.orderId }}</span>
                 </p>
-                <p class="text-lg font-bold text-amber-700 mt-1">{{ formatIDR(p.amount) }}</p>
-                <p class="text-[11px] text-gray-500 mt-0.5">
+                <p class="text-[20px] font-[800] text-main mt-2">{{ formatIDR(p.amount) }}</p>
+                <p class="text-[11px] text-main/60 mt-1">
                   Kadaluarsa: {{ formatExpiry(p.expiresAt) }}
                 </p>
               </div>
-              <div class="flex flex-col gap-1.5 shrink-0">
+              <div class="flex flex-col gap-2 shrink-0">
                 <button
                   @click="resume(p)"
                   :disabled="resumingOrderId === p.orderId"
-                  class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-semibold px-3 py-2 rounded-md shadow-md whitespace-nowrap flex items-center gap-1"
+                  class="bg-main hover:opacity-[0.92] disabled:opacity-50 text-white text-[12px] font-[700] px-4 py-2 rounded-full whitespace-nowrap flex items-center justify-center gap-1.5 shadow-sm transition"
                 >
                   <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
@@ -41,7 +52,8 @@
                 </button>
                 <button
                   @click="dismiss(p.orderId)"
-                  class="text-[11px] text-gray-500 hover:text-red-600 px-2 py-1"
+                  :disabled="cancelingOrderId === p.orderId"
+                  class="border border-[#D8E4FF] text-main/75 hover:bg-[#F3F7FF] hover:text-main disabled:opacity-50 text-[12px] font-[600] px-4 py-2 rounded-full transition"
                 >
                   Batalkan
                 </button>
@@ -55,7 +67,9 @@
 </template>
 
 <script>
+import Swal from 'sweetalert2';
 import { getPendingPayments, removePendingPayment } from '@/utils/pendingPayments';
+import { cancelPayment, syncPaymentStatus, isTerminalPaymentStatus } from '@/utils/midtransPayment';
 
 export default {
   name: 'PendingPaymentBanner',
@@ -63,6 +77,7 @@ export default {
     return {
       pendingList: [],
       resumingOrderId: null,
+      cancelingOrderId: null,
       refreshTimer: null,
     };
   },
@@ -101,9 +116,44 @@ export default {
       if (hours > 0) return `${hours} jam ${minutes} menit lagi`;
       return `${minutes} menit lagi`;
     },
-    dismiss(orderId) {
-      removePendingPayment(orderId);
-      this.refresh();
+    async dismiss(orderId) {
+      const confirm = await Swal.fire({
+        icon: 'warning',
+        title: 'Batalkan pembayaran?',
+        text: 'Transaksi yang dibatalkan tidak bisa dilanjutkan dari banner ini.',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, batalkan',
+        cancelButtonText: 'Kembali',
+        confirmButtonColor: '#d33',
+      });
+      if (!confirm.isConfirmed) return;
+
+      this.cancelingOrderId = orderId;
+      try {
+        const result = await cancelPayment(orderId);
+        if (!isTerminalPaymentStatus(result?.paymentStatus)) {
+          await Swal.fire({
+            icon: 'info',
+            title: 'Status belum berubah',
+            text: 'Pembayaran belum berhasil dibatalkan. Silakan coba lagi sesaat lagi.',
+          });
+          return;
+        }
+        await Swal.fire({
+          icon: 'success',
+          title: 'Pembayaran dibatalkan',
+          text: 'Status transaksi telah diperbarui.',
+        });
+      } catch (error) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Gagal membatalkan pembayaran',
+          text: error?.response?.data?.message || error?.message || 'Silakan coba lagi.',
+        });
+      } finally {
+        this.cancelingOrderId = null;
+        this.refresh();
+      }
     },
     resume(p) {
       if (!window.snap) {
@@ -116,6 +166,7 @@ export default {
           removePendingPayment(p.orderId);
           this.refresh();
           this.resumingOrderId = null;
+          syncPaymentStatus(p.orderId, { attempts: 1, removeWhenTerminal: false }).catch(() => {});
           window.location.reload();
         },
         onPending: () => {
@@ -124,9 +175,11 @@ export default {
         },
         onError: () => {
           this.resumingOrderId = null;
+          syncPaymentStatus(p.orderId).catch(() => {});
         },
         onClose: () => {
           this.resumingOrderId = null;
+          syncPaymentStatus(p.orderId).catch(() => {});
         },
       });
     },
@@ -141,12 +194,5 @@ export default {
 .slide-up-enter-from, .slide-up-leave-to {
   transform: translateY(120%);
   opacity: 0;
-}
-@keyframes pulse-border {
-  0%, 100% { box-shadow: 0 20px 25px -5px rgba(251, 191, 36, 0.4), 0 10px 10px -5px rgba(251, 191, 36, 0.2); }
-  50% { box-shadow: 0 20px 25px -5px rgba(251, 191, 36, 0.7), 0 10px 10px -5px rgba(251, 191, 36, 0.4); }
-}
-.animate-pulse-border {
-  animation: pulse-border 2s ease-in-out infinite;
 }
 </style>
