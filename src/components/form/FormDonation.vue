@@ -73,6 +73,7 @@
             <InputText
               keyValue="amount"
               label="Nominal (Rp)"
+              :value="data.amount"
               :class="showMethodSelector ? 'w-full md:w-1/2' : 'w-full'"
               :required="true"
               @update="updateValue"
@@ -89,13 +90,22 @@
             />
           </div>
 
+          <div v-if="selectedFaculty" class="mt-3 rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            <p class="font-[700]">Rincian Nominal Donasi</p>
+            <p class="mt-1">Nominal dasar harus kelipatan <strong>Rp1.000</strong>, sehingga 3 digit terakhir selalu <strong>000</strong>.</p>
+            <p class="mt-2">Nominal dasar: <strong>{{ formattedBaseAmount }}</strong></p>
+            <p>Kode unik fakultas {{ selectedFaculty.name }}: <strong class="font-mono">{{ donationAmountSummary.uniqueCode || '---' }}</strong></p>
+            <p class="mt-1">Total pembayaran: <strong>{{ formattedGrossAmount }}</strong></p>
+          </div>
+
           <div v-if="data.paymentMethod === 'Manual (Transfer Bank)'" class="flex flex-col gap-2 mt-6 bg-gray-50 border border-gray-200 p-4 rounded">
             <h2 class="text-[16px] md:text-[24px] font-[700]">Petunjuk Transfer Manual</h2>
-            <p>Silakan transfer total donasi ditambah <strong>kode unik fakultas</strong> Anda sebagai 3 digit terakhir nominal, agar donasi mudah diverifikasi.</p>
+            <p>Silakan transfer <strong>tepat sesuai total pembayaran</strong>, yaitu nominal dasar dengan 3 digit terakhir <strong>000</strong> ditambah <strong>kode unik fakultas</strong> Anda.</p>
             <p v-if="selectedFaculty">
               Fakultas <strong>{{ selectedFaculty.name }}</strong> — kode unik: <strong class="font-mono">{{ selectedFaculty.kodeUnik }}</strong>
             </p>
             <p v-else class="text-sm text-gray-600">Pilih fakultas terlebih dahulu untuk melihat kode unik Anda.</p>
+            <p v-if="selectedFaculty && donationAmountSummary.isValidBaseAmount">Total transfer: <strong>{{ formattedGrossAmount }}</strong></p>
             <p>Rekening: <strong>130.001-900-0366</strong> Bank Mandiri Kantor Kas Bandung ITB an. IOM ITB</p>
             <p>Kontak WA: <strong>081573598031</strong> (Ibu Ani Suliawaty)</p>
             <div class="flex flex-col md:flex-row md:justify-between gap-4 mt-2">
@@ -117,6 +127,7 @@
             <h2 class="text-[16px] md:text-[24px] font-[700]">Pembayaran Online via Midtrans</h2>
             <p>Setelah menekan <strong>Kirim</strong>, jendela pembayaran Midtrans akan terbuka. Anda dapat membayar dengan kartu kredit, transfer bank, e-wallet, QRIS, dan metode lainnya.</p>
             <p v-if="selectedFaculty" class="text-sm text-gray-600">Transaksi akan tercatat atas fakultas <strong>{{ selectedFaculty.name }}</strong> (kode {{ selectedFaculty.kodeUnik }}).</p>
+            <p v-if="selectedFaculty && donationAmountSummary.isValidBaseAmount" class="text-sm text-gray-600">Tagihan Midtrans akan dibuat sebesar <strong>{{ formattedGrossAmount }}</strong>.</p>
           </div>
 
           <div class="flex flex-col md:flex-row md:justify-between gap-4 mt-4">
@@ -156,6 +167,7 @@ import { savePendingPayment, removePendingPayment } from "@/utils/pendingPayment
 import { prettifyDonationType, describeNotificationChannels } from "@/utils/donationLabels";
 import { syncPaymentStatus, isTerminalPaymentStatus } from "@/utils/midtransPayment";
 import { isNotStartedPaymentSession } from "@/utils/paymentSessionState";
+import { parseDonationAmount, getDonationAmountSummary, formatIDR } from "@/utils/donationAmount";
 
 const successLogo = require('@/assets/image/IOM-ITB-PrimaryLogo-blue.png');
 
@@ -248,6 +260,18 @@ export default {
     selectedFaculty() {
       return this.facultiesList.find(f => f.id === this.data.facultyId) || null;
     },
+    donationAmountSummary() {
+      return getDonationAmountSummary({
+        amount: this.data.amount,
+        faculty: this.selectedFaculty,
+      });
+    },
+    formattedBaseAmount() {
+      return formatIDR(this.donationAmountSummary.baseAmount);
+    },
+    formattedGrossAmount() {
+      return formatIDR(this.donationAmountSummary.grossAmount);
+    },
   },
   async mounted() {
     document.body.classList.add('no-scroll');
@@ -269,6 +293,10 @@ export default {
       this.$emit('close');
     },
     updateValue({ key, value }) {
+      if (key === 'amount') {
+        this.data[key] = parseDonationAmount(value);
+        return;
+      }
       this.data[key] = value;
     },
     onPhoneInput(e) {
@@ -295,7 +323,7 @@ export default {
         name: this.data.name,
         email: this.data.email,
         noWhatsapp: this.fullPhone(),
-        amount: Number(this.data.amount) || 0,
+        amount: this.donationAmountSummary.baseAmount,
         donationType: this.data.donationType,
         facultyId: this.data.facultyId,
         notification: this.data.notification,
@@ -314,6 +342,14 @@ export default {
       }
       if (!this.data.amount || Number(this.data.amount) <= 0) {
         Swal.fire({ icon: 'warning', title: 'Lengkapi Form', text: 'Masukkan nominal donasi.' });
+        return false;
+      }
+      if (!this.donationAmountSummary.isValidBaseAmount) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Nominal Tidak Valid',
+          text: 'Nominal dasar donasi harus kelipatan Rp1.000, sehingga 3 digit terakhir bernilai 000.',
+        });
         return false;
       }
 
@@ -373,14 +409,17 @@ export default {
     },
     async submitManual() {
       const payload = { ...this.buildPayload(), proof: this.data.proof };
-      await this.store.dispatch(POST_DONATION, { data: payload });
+      const response = await this.store.dispatch(POST_DONATION, { data: payload });
       document.body.classList.remove('no-scroll');
       const donationLabel = prettifyDonationType(this.data.donationType);
       const channels = describeNotificationChannels(this.data.notification);
+      const donation = response?.data || response || {};
+      const grossAmount = Number(donation.grossAmount || this.donationAmountSummary.grossAmount);
       await Swal.fire({
         title: 'Donasi Terkirim!',
         html: `
           <p>Terima kasih atas <strong>${donationLabel}</strong> Anda.</p>
+          <p style="margin-top:8px;">Total donasi yang kami catat: <strong>${formatIDR(grossAmount)}</strong>.</p>
           <p style="margin-top:8px;">Bukti pembayaran akan kami verifikasi oleh tim IOM ITB.</p>
           <p style="margin-top:8px;color:#6b7280;font-size:13px;">Konfirmasi akan dikirim ke ${channels}.</p>
         `,
@@ -406,23 +445,23 @@ export default {
       const payload = (result && result.data) || result || {};
       const token = payload.token;
       const orderId = payload.orderId;
+      const grossAmount = Number(payload.grossAmount || this.donationAmountSummary.grossAmount || 0);
       if (!token) throw new Error("Snap token tidak tersedia");
 
-      const amount = Number(this.data.amount) || 0;
       const donationLabel = prettifyDonationType(this.data.donationType);
       if (orderId) {
         savePendingPayment({
           orderId,
           token,
           type: 'donation',
-          amount,
+          amount: grossAmount,
           label: `Donasi — ${donationLabel}`,
         });
         window.dispatchEvent(new Event('iom:pending-updated'));
       }
 
       const channels = describeNotificationChannels(this.data.notification);
-      const amountFormatted = Number(amount).toLocaleString('id-ID');
+      const amountFormatted = grossAmount.toLocaleString('id-ID');
 
       await new Promise((resolve) => {
         window.snap.pay(token, {
