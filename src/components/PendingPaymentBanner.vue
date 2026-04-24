@@ -125,12 +125,21 @@ export default {
         confirmButtonText: 'Ya, batalkan',
         cancelButtonText: 'Kembali',
         confirmButtonColor: '#d33',
+        cancelButtonColor: '#003793',
       });
       if (!confirm.isConfirmed) return;
 
       this.cancelingOrderId = orderId;
       try {
         const result = await cancelPayment(orderId);
+        if (result?.gatewayState === 'not_started') {
+          await Swal.fire({
+            icon: 'info',
+            title: 'Pengingat dihapus',
+            text: 'Pembayaran belum pernah dimulai di Midtrans, jadi tidak ada transaksi gateway yang perlu dibatalkan.',
+          });
+          return;
+        }
         if (!isTerminalPaymentStatus(result?.paymentStatus)) {
           await Swal.fire({
             icon: 'info',

@@ -45,7 +45,7 @@ export const cancelPayment = async (orderId) => {
   const response = await ApiService.postJson("/payments/cancel", { orderId });
   const result = normalizeResponse(response);
 
-  if (isTerminalPaymentStatus(result.paymentStatus)) {
+  if (isTerminalPaymentStatus(result.paymentStatus) || result.gatewayState === "not_started") {
     removePendingPayment(orderId);
     window.dispatchEvent(new Event("iom:pending-updated"));
   }
