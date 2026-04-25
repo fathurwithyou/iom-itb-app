@@ -57,9 +57,11 @@ const actions = {
         return new Promise((resolve, reject) => {
             ApiService.get(`/transactions/${params.id}`)
                 .then(response => {
-                    const { data } = response;
-                    context.commit(SET_TRANSACTION_DETAIL, data);
-                    resolve(data);
+                    const body = response?.data || {};
+                    const inner = body?.data?.data ?? body?.data ?? body;
+                    const normalized = { data: inner };
+                    context.commit(SET_TRANSACTION_DETAIL, normalized);
+                    resolve(normalized);
                 })
                 .catch(err => {
                     console.error("Error fetching transaction by id:", err);
