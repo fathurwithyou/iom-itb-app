@@ -374,6 +374,7 @@ export default {
             data: { ...basePayload, payment: this.payment },
           });
           const itemName = this.currentMerchandise?.name || 'Pesanan';
+          const txId = response?.data?.transactionId;
           await Swal.fire({
             title: "Checkout Berhasil!",
             html: `
@@ -388,7 +389,7 @@ export default {
             confirmButtonColor: '#7066e0',
             confirmButtonText: "OK",
           });
-          window.location.href = `/transaction?q=${response?.data?.code}`;
+          window.location.href = `/order-status?transactionId=${txId}`;
         }
       } catch (err) {
         console.error(err);
@@ -414,6 +415,7 @@ export default {
       const token = payload.token;
       const orderId = payload.orderId;
       const code = payload.code;
+      const transactionId = payload.transactionId;
       if (!token) throw new Error("Snap token tidak tersedia");
 
       const grossAmount = Number(this.currentMerchandise?.price || 0) * Number(basePayload.qty || 0);
@@ -425,6 +427,7 @@ export default {
           amount: grossAmount,
           label: `Pembelian — ${this.currentMerchandise?.name || 'Merchandise'}`,
           code,
+          transactionId,
         });
         window.dispatchEvent(new Event('iom:pending-updated'));
       }
@@ -450,7 +453,8 @@ export default {
               imageAlt: 'IOM ITB',
               confirmButtonColor: '#7066e0',
             }).then(() => {
-              if (code) window.location.href = `/transaction?q=${code}`;
+              if (transactionId) window.location.href = `/order-status?transactionId=${transactionId}`;
+              else if (code) window.location.href = `/transaksi?q=${code}`;
               else window.location.reload();
             });
             resolve();

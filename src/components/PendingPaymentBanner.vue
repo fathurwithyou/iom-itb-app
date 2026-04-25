@@ -177,7 +177,18 @@ export default {
           this.refresh();
           this.resumingOrderId = null;
           syncPaymentStatus(p.orderId, { attempts: 1, removeWhenTerminal: false }).catch(() => {});
-          window.location.reload();
+          Swal.fire({
+            icon: 'success',
+            title: 'Pembayaran Berhasil',
+            html: `<p>Terima kasih, pembayaran sebesar <strong>${this.formatIDR(p.amount)}</strong> telah kami terima.</p>`,
+            confirmButtonColor: '#7066e0',
+          }).then(() => {
+            if (p.type === 'transaction' && p.transactionId) {
+              window.location.href = `/order-status?transactionId=${p.transactionId}`;
+            } else {
+              window.location.reload();
+            }
+          });
         },
         onPending: () => {
           this.resumingOrderId = null;

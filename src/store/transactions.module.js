@@ -3,6 +3,7 @@ import ApiService from "./api.service";
 export const GET_TRANSACTIONS = "getTransactions";
 export const SET_TRANSACTIONS = "setTransactions";
 export const GET_TRANSACTION_DETAIL = "getTransactionDetail";
+export const GET_TRANSACTION_BY_ID = "getTransactionById";
 export const SET_TRANSACTION_DETAIL = "setTransactionDetail";
 export const POST_TRANSACTION = "postTransaction";
 export const POST_TRANSACTION_SNAP = "postTransactionSnap";
@@ -48,6 +49,20 @@ const actions = {
                 })
                 .catch(err => {
                     console.error("Error fetching transaction detail:", err);
+                    reject(err);
+                });
+        });
+    },
+    [GET_TRANSACTION_BY_ID](context, params) {
+        return new Promise((resolve, reject) => {
+            ApiService.get(`/transactions/${params.id}`)
+                .then(response => {
+                    const { data } = response;
+                    context.commit(SET_TRANSACTION_DETAIL, data);
+                    resolve(data);
+                })
+                .catch(err => {
+                    console.error("Error fetching transaction by id:", err);
                     reject(err);
                 });
         });

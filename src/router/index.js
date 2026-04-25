@@ -38,6 +38,12 @@ const routes = [
         meta: { haveAuthenticated: false },
       },
       {
+        path: "/order-status",
+        name: "Order Status",
+        component: () => import("@/views/pages/OrderStatusView.vue"),
+        meta: { haveAuthenticated: false },
+      },
+      {
         path: "/tentang-kami",
         name: "About",
         component: () => import("@/views/pages/AboutView.vue"),
