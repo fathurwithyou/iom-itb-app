@@ -1,6 +1,5 @@
 import ApiService from "./api.service";
 
-// Constants for actions and mutations
 export const GET_ACTIVITIES = "getActivities";
 export const GET_DETAIL_ACTIVITY = "getDetailActivity";
 export const SET_ACTIVITIES = "setActivities";
@@ -9,23 +8,20 @@ export const POST_ACTIVITY = "postActivity";
 export const PUT_ACTIVITY = "putActivity";
 export const DELETE_ACTIVITY = "deleteActivity";
 
-// Define the initial state
 const state = {
-    activities: {},
-    detailActivity:{}
+    activities: [],
+    detailActivity: null
 };
 
-// Define getters
 const getters = {
     activities(state) {
-        return state.activities; // Return the list of activities
+        return state.activities;
     },
     detailActivity(state) {
-        return state.detailActivity; // Return the list of activities
+        return state.detailActivity;
     },
 };
 
-// Define actions
 const actions = {
     [GET_ACTIVITIES](context, params) {
         return new Promise((resolve, reject) => {
@@ -55,57 +51,26 @@ const actions = {
                 });
         });
     },
-    [POST_ACTIVITY](context, params) {
-        return new Promise((resolve, reject) => {
-            ApiService.post("/activities", params.data)
-                .then(response => {
-                    const { data } = response;
-                    resolve(data);
-                })
-                .catch(err => {
-                    console.error("Error creating activity:", err);
-                    reject(err);
-                });
-        });
-    },
-    [PUT_ACTIVITY](context, params) {
-        return new Promise((resolve, reject) => {
-            ApiService.put(`/activities/${params.id}`, params.data)
-                .then(response => {
-                    const { data } = response;
-                    resolve(data);
-                })
-                .catch(err => {
-                    console.error("Error updating activity:", err);
-                    reject(err);
-                });
-        });
-    },
-    [DELETE_ACTIVITY](context, params) {
-        return new Promise((resolve, reject) => {
-            ApiService.delete(`/activities/${params.id}`)
-                .then(() => {
-                    resolve();
-                })
-                .catch(err => {
-                    console.error("Error deleting activity:", err);
-                    reject(err);
-                });
-        });
-    },
 };
 
-// Define mutations
 const mutations = {
     [SET_ACTIVITIES](state, data) {
-        state.activities = data.data; // Set the state with the fetched activities data
+        // Handle both response formats:
+        // - Lama: { data: [...] }
+        // - Baru: { data: { data: [...], pagination: {...} } }
+        if (Array.isArray(data?.data)) {
+            state.activities = data.data;
+        } else if (Array.isArray(data?.data?.data)) {
+            state.activities = data.data.data;
+        } else {
+            state.activities = [];
+        }
     },
     [SET_DETAIL_ACTIVITY](state, data) {
-        state.detailActivity = data.data; // Set the state with the fetched activities data
+        state.detailActivity = data?.data || data || null;
     },
 };
 
-// Export the Vuex store module
 export default {
     state,
     getters,
