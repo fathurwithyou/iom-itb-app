@@ -39,6 +39,7 @@ export const savePendingPayment = (payment) => {
     amount: payment.amount,
     label: payment.label,
     code: payment.code || null,
+    orderStatusToken: payment.orderStatusToken || payment.trackingToken || payment.publicToken || null,
     transactionId: payment.transactionId || null,
     createdAt: now(),
     expiresAt: now() + ttlMs,

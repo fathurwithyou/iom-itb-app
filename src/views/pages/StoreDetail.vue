@@ -374,7 +374,7 @@ export default {
             data: { ...basePayload, payment: this.payment },
           });
           const itemName = this.currentMerchandise?.name || 'Pesanan';
-          const txId = response?.data?.transactionId;
+          const orderStatusToken = response?.data?.orderStatusToken || response?.data?.trackingToken || response?.data?.publicToken;
           await Swal.fire({
             title: "Checkout Berhasil!",
             html: `
@@ -389,7 +389,8 @@ export default {
             confirmButtonColor: '#7066e0',
             confirmButtonText: "OK",
           });
-          window.location.href = `/order-status?transactionId=${txId}`;
+          if (orderStatusToken) window.location.href = `/order-status?token=${encodeURIComponent(orderStatusToken)}`;
+          else window.location.href = `/transaksi?q=${response?.data?.code || ''}`;
         }
       } catch (err) {
         console.error(err);
@@ -415,7 +416,7 @@ export default {
       const token = payload.token;
       const orderId = payload.orderId;
       const code = payload.code;
-      const transactionId = payload.transactionId;
+      const orderStatusToken = payload.orderStatusToken || payload.trackingToken || payload.publicToken;
       if (!token) throw new Error("Snap token tidak tersedia");
 
       const grossAmount = Number(this.currentMerchandise?.price || 0) * Number(basePayload.qty || 0);
@@ -427,7 +428,7 @@ export default {
           amount: grossAmount,
           label: `Pembelian — ${this.currentMerchandise?.name || 'Merchandise'}`,
           code,
-          transactionId,
+          orderStatusToken,
         });
         window.dispatchEvent(new Event('iom:pending-updated'));
       }
@@ -453,7 +454,7 @@ export default {
               imageAlt: 'IOM ITB',
               confirmButtonColor: '#7066e0',
             }).then(() => {
-              if (transactionId) window.location.href = `/order-status?transactionId=${transactionId}`;
+              if (orderStatusToken) window.location.href = `/order-status?token=${encodeURIComponent(orderStatusToken)}`;
               else if (code) window.location.href = `/transaksi?q=${code}`;
               else window.location.reload();
             });

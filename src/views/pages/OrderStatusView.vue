@@ -34,10 +34,6 @@
             <p class="font-mono font-semibold">{{ transaction.code || '-' }}</p>
           </div>
           <div>
-            <p class="text-gray-500">ID Transaksi</p>
-            <p class="font-mono font-semibold">{{ transaction.id }}</p>
-          </div>
-          <div>
             <p class="text-gray-500">Nama Pemesan</p>
             <p class="font-semibold">{{ transaction.username }}</p>
           </div>
@@ -99,7 +95,7 @@
 </template>
 
 <script>
-import { GET_TRANSACTION_BY_ID } from "@/store/transactions.module";
+import { GET_TRANSACTION_BY_TOKEN } from "@/store/transactions.module";
 
 const PAYMENT_STATUS_LABELS = {
   pending: "Menunggu Pembayaran",
@@ -117,8 +113,8 @@ export default {
     };
   },
   computed: {
-    transactionId() {
-      return this.$route.query.transactionId;
+    orderStatusToken() {
+      return this.$route.query.token;
     },
     transaction() {
       return this.$store.getters.currentTransaction?.data || null;
@@ -146,13 +142,13 @@ export default {
   },
   methods: {
     async fetch() {
-      if (!this.transactionId) {
-        this.error = "Parameter transactionId tidak ditemukan.";
+      if (!this.orderStatusToken) {
+        this.error = "Tautan status pesanan tidak valid.";
         this.loading = false;
         return;
       }
       try {
-        await this.$store.dispatch(GET_TRANSACTION_BY_ID, { id: this.transactionId });
+        await this.$store.dispatch(GET_TRANSACTION_BY_TOKEN, { token: this.orderStatusToken });
       } catch (err) {
         this.error = err?.response?.data?.message || err?.message || "Gagal memuat data pesanan.";
       } finally {

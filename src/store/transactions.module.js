@@ -4,6 +4,7 @@ export const GET_TRANSACTIONS = "getTransactions";
 export const SET_TRANSACTIONS = "setTransactions";
 export const GET_TRANSACTION_DETAIL = "getTransactionDetail";
 export const GET_TRANSACTION_BY_ID = "getTransactionById";
+export const GET_TRANSACTION_BY_TOKEN = "getTransactionByToken";
 export const SET_TRANSACTION_DETAIL = "setTransactionDetail";
 export const POST_TRANSACTION = "postTransaction";
 export const POST_TRANSACTION_SNAP = "postTransactionSnap";
@@ -65,6 +66,21 @@ const actions = {
                 })
                 .catch(err => {
                     console.error("Error fetching transaction by id:", err);
+                    reject(err);
+                });
+        });
+    },
+    [GET_TRANSACTION_BY_TOKEN](context, params) {
+        return new Promise((resolve, reject) => {
+            ApiService.get(`/transactions/public/${params.token}`)
+                .then(response => {
+                    const body = response?.data || {};
+                    const normalized = { data: body?.data ?? body };
+                    context.commit(SET_TRANSACTION_DETAIL, normalized);
+                    resolve(normalized);
+                })
+                .catch(err => {
+                    console.error("Error fetching transaction by token:", err);
                     reject(err);
                 });
         });

@@ -183,8 +183,8 @@ export default {
             html: `<p>Terima kasih, pembayaran sebesar <strong>${this.formatIDR(p.amount)}</strong> telah kami terima.</p>`,
             confirmButtonColor: '#7066e0',
           }).then(() => {
-            if (p.type === 'transaction' && p.transactionId) {
-              window.location.href = `/order-status?transactionId=${p.transactionId}`;
+            if (p.type === 'transaction' && p.orderStatusToken) {
+              window.location.href = `/order-status?token=${encodeURIComponent(p.orderStatusToken)}`;
             } else {
               window.location.reload();
             }
