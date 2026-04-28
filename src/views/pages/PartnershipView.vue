@@ -42,7 +42,7 @@
                 {{ activity.description || 'Kegiatan kemitraan IOM ITB.' }}
               </p>
               <a
-                :href="`/kemitraan/kegiatan/${activity.id}`"
+                :href="`/kemitraan/kegiatan/${slugify(activity.name)}`"
                 class="mx-auto mt-5 inline-flex w-full max-w-[210px] items-center justify-center rounded-full bg-white px-5 py-2.5 text-[13px] font-[700] text-main shadow hover:opacity-90"
               >
                 Baca Selengkapnya
@@ -117,7 +117,7 @@
                 {{ activity.location || 'Lokasi menyesuaikan' }} · {{ formatDate(activity.startDate) }}
               </p>
               <a
-                :href="`/kemitraan/kegiatan/${activity.id}`"
+                :href="`/kemitraan/kegiatan/${slugify(activity.name)}`"
                 class="mx-auto mt-5 inline-flex w-full max-w-[210px] items-center justify-center rounded-full bg-white px-5 py-2.5 text-[13px] font-[700] text-main shadow hover:opacity-90"
               >
                 Baca Selengkapnya
@@ -159,7 +159,7 @@
                 {{ truncate(partner.description || 'Mitra resmi IOM ITB dalam pengembangan program dan kegiatan komunitas.', 130) }}
               </p>
               <a
-                :href="`/kemitraan/${partner.id}`"
+                :href="`/kemitraan/${slugify(partner.name)}`"
                 class="mx-auto mt-5 inline-flex w-full max-w-[210px] items-center justify-center rounded-full bg-white px-5 py-2.5 text-[13px] font-[700] text-main shadow hover:opacity-90"
               >
                 Lihat Selengkapnya
@@ -188,7 +188,7 @@
                   {{ activity.description || 'Kegiatan kemitraan IOM ITB.' }}
                 </p>
                 <a
-                  :href="`/kemitraan/kegiatan/${activity.id}`"
+                :href="`/kemitraan/kegiatan/${slugify(activity.name)}`"
                   class="mx-auto mt-5 inline-flex w-full max-w-[210px] items-center justify-center rounded-full bg-white px-5 py-2.5 text-[13px] font-[700] text-main shadow hover:opacity-90"
                 >
                   Baca Selengkapnya
@@ -205,10 +205,7 @@
 
 <script>
 import Loading from "@/components/loading/LoadingItem.vue";
-import {
-  GET_DETAIL_KEMITRAAN,
-  GET_KEMITRAAN,
-} from "@/store/kemitraan.module";
+import { GET_KEMITRAAN } from "@/store/kemitraan.module";
 import { GET_KEGIATAN_KEMITRAAN } from "@/store/kegiatanKemitraan.module";
 
 export default {
@@ -232,23 +229,24 @@ export default {
       return this.$store.getters.kemitraan || [];
     },
     selectedPartner() {
-      if (this.isDetailPage) return this.$store.getters.detailKemitraan;
-      return null;
+      if (!this.isDetailPage) return null;
+      const slug = this.$route.params.slug;
+      return this.partners.find((item) => this.slugify(item.name) === slug) || null;
     },
     activities() {
       return this.$store.getters.kegiatanKemitraan || [];
     },
     selectedActivity() {
-      const id = Number(this.$route.params.id);
-      return this.activities.find((item) => Number(item.id) === id) || null;
+      const slug = this.$route.params.slug;
+      return this.activities.find((item) => this.slugify(item.name) === slug) || null;
     },
     relatedActivities() {
-      const partnerId = Number(this.$route.params.id);
+      const partnerId = Number(this.selectedPartner?.id);
       return this.activities.filter((item) => Number(item.kemitraanId) === partnerId);
     },
     otherActivities() {
-      const activityId = Number(this.$route.params.id);
-      return this.activities.filter((item) => Number(item.id) !== activityId).slice(0, 3);
+      const slug = this.$route.params.slug;
+      return this.activities.filter((item) => this.slugify(item.name) !== slug).slice(0, 3);
     },
   },
   async mounted() {
@@ -271,10 +269,6 @@ export default {
         this.$store.dispatch(GET_KEGIATAN_KEMITRAAN),
       ];
 
-      if (this.isDetailPage) {
-        tasks.push(this.$store.dispatch(GET_DETAIL_KEMITRAAN, { id: this.$route.params.id }));
-      }
-
       await Promise.allSettled(tasks);
     },
     partnerImage(partner) {
@@ -295,6 +289,14 @@ export default {
         month: "long",
         year: "numeric",
       });
+    },
+    slugify(value) {
+      return String(value || "")
+        .toLowerCase()
+        .trim()
+        .replace(/&/g, " dan ")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
     },
   },
 };

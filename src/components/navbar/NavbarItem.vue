@@ -43,7 +43,7 @@
               <a :class="`text-main cursor-pointer block px-4 py-2 hover:opacity-[0.8] ${$route.path === '/merchandise' ? 'font-[800]' : 'font-[500]'}`" aria-current="page" href="/merchandise">Merchandise</a>
             </li>
         <li class="nav-item">
-              <a :class="`text-main cursor-pointer block px-4 py-2 hover:opacity-[0.8] ${$route.path.startsWith('/kemitraan') ? 'font-[800]' : 'font-[500]'}`" aria-current="page" href="/kemitraan">Kemitraan</a>
+              <a :class="`text-main cursor-pointer block px-4 py-2 hover:opacity-[0.8] ${$route.path.startsWith('/kemitraan') ? 'font-[800]' : 'font-[500]'}`" aria-current="page" href="/kemitraan">Mitra Kami</a>
             </li>
         <li class="py-2">
           <a
@@ -121,7 +121,7 @@
               <a :class="`text-main hover:opacity-80 px-3 py-2 ${$route.path === '/merchandise' ? 'font-[800]' : 'font-[500]'}`" aria-current="page" href="/merchandise">Merchandise</a>
             </li>
             <li class="nav-item">
-              <a :class="`text-main hover:opacity-80 px-3 py-2 ${$route.path.startsWith('/kemitraan') ? 'font-[800]' : 'font-[500]'}`" aria-current="page" href="/kemitraan">Kemitraan</a>
+              <a :class="`text-main hover:opacity-80 px-3 py-2 ${$route.path.startsWith('/kemitraan') ? 'font-[800]' : 'font-[500]'}`" aria-current="page" href="/kemitraan">Mitra Kami</a>
             </li>
             <li class="nav-item">
               <a :class="`text-white hover:opacity-80 px-[50px] py-[13px] bg-main rounded-full`" aria-current="page" href="/donasi">Donasi</a>

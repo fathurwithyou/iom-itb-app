@@ -38,13 +38,13 @@ const routes = [
         meta: { haveAuthenticated: false },
       },
       {
-        path: "/kemitraan/kegiatan/:id",
+        path: "/kemitraan/kegiatan/:slug",
         name: "Detail Kegiatan Kemitraan",
         component: () => import("@/views/pages/PartnershipView.vue"),
         meta: { haveAuthenticated: false },
       },
       {
-        path: "/kemitraan/:id",
+        path: "/kemitraan/:slug",
         name: "Detail Kemitraan",
         component: () => import("@/views/pages/PartnershipView.vue"),
         meta: { haveAuthenticated: false },
