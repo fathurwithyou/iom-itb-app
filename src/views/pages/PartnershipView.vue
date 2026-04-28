@@ -4,10 +4,16 @@
     <section v-if="isActivityDetailPage" class="px-[18px] pb-12 pt-6 md:px-[70px]">
       <div class="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr,420px] lg:items-start">
         <div>
-          <a href="/kemitraan" class="mb-5 inline-flex items-center gap-2 text-[14px] font-[700] text-main hover:opacity-70">
-            <img :src="require('@/assets/icon/arrow-left.svg')" alt="" class="h-4 w-4" />
-            Kembali ke Kemitraan
-          </a>
+          <nav class="mb-4 flex items-center gap-2 text-[13px] font-[700] text-main/60">
+            <a href="/kemitraan" class="inline-flex items-center gap-1.5 hover:text-main">
+              <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M11.78 4.22a.75.75 0 0 1 0 1.06L7.06 10l4.72 4.72a.75.75 0 1 1-1.06 1.06l-5.25-5.25a.75.75 0 0 1 0-1.06l5.25-5.25a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+              </svg>
+              Mitra Kami
+            </a>
+            <span>/</span>
+            <span class="text-main">{{ selectedActivity?.name || 'Kegiatan Kemitraan' }}</span>
+          </nav>
 
           <h1 class="text-[32px] font-[800] leading-tight md:text-[50px]">
             {{ selectedActivity?.name || 'Kegiatan Kemitraan' }}
@@ -57,10 +63,16 @@
     <section v-else-if="isDetailPage" class="px-[18px] pb-12 pt-6 md:px-[70px]">
       <div class="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr,420px] lg:items-start">
         <div>
-          <a href="/kemitraan" class="mb-5 inline-flex items-center gap-2 text-[14px] font-[700] text-main hover:opacity-70">
-            <img :src="require('@/assets/icon/arrow-left.svg')" alt="" class="h-4 w-4" />
-            Kembali ke Kemitraan
-          </a>
+          <nav class="mb-4 flex items-center gap-2 text-[13px] font-[700] text-main/60">
+            <a href="/kemitraan" class="inline-flex items-center gap-1.5 hover:text-main">
+              <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M11.78 4.22a.75.75 0 0 1 0 1.06L7.06 10l4.72 4.72a.75.75 0 1 1-1.06 1.06l-5.25-5.25a.75.75 0 0 1 0-1.06l5.25-5.25a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+              </svg>
+              Mitra Kami
+            </a>
+            <span>/</span>
+            <span class="text-main">{{ selectedPartner?.name || 'Kemitraan' }}</span>
+          </nav>
 
           <h1 class="text-[32px] font-[800] leading-tight md:text-[50px]">
             {{ selectedPartner?.name || 'Kemitraan' }}
