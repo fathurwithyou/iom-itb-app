@@ -32,6 +32,24 @@ const routes = [
         meta: { haveAuthenticated: false },
       },
       {
+        path: "/kemitraan",
+        name: "Kemitraan",
+        component: () => import("@/views/pages/PartnershipView.vue"),
+        meta: { haveAuthenticated: false },
+      },
+      {
+        path: "/kemitraan/kegiatan/:id",
+        name: "Detail Kegiatan Kemitraan",
+        component: () => import("@/views/pages/PartnershipView.vue"),
+        meta: { haveAuthenticated: false },
+      },
+      {
+        path: "/kemitraan/:id",
+        name: "Detail Kemitraan",
+        component: () => import("@/views/pages/PartnershipView.vue"),
+        meta: { haveAuthenticated: false },
+      },
+      {
         path: "/transaksi",
         name: "Transaction",
         component: () => import("@/views/pages/TransactionView.vue"),

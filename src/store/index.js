@@ -7,6 +7,8 @@ import helpSubmissions from "./helpSubmissions.module";
 import transactions from "./transactions.module";
 import members from "./members.module";
 import faculties from "./faculties.module";
+import kemitraan from "./kemitraan.module";
+import kegiatanKemitraan from "./kegiatanKemitraan.module";
 
 export default createStore({
   state() {
@@ -29,5 +31,7 @@ export default createStore({
     transactions,
     members,
     faculties,
+    kemitraan,
+    kegiatanKemitraan,
   },
 });
