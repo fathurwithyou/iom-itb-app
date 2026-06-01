@@ -139,9 +139,20 @@
                 />
               </div>
               <!-- Tags -->
-              <div v-if="item.tags?.length > 0" class="flex flex-wrap gap-1.5 mb-2">
-                <span v-for="tag in item.tags" :key="tag.id" class="text-sm text-gray-400">
-                  {{ tag.name }}
+              <div class="flex flex-wrap gap-1.5 mb-2">
+                <template v-if="item.tags?.length > 0">
+                  <span
+                    v-for="tag in item.tags"
+                    :key="tag.id"
+                    @click.prevent="goToTagSearch(tag.name)"
+                    class="px-3 py-1 text-xs font-semibold rounded-full cursor-pointer hover:opacity-75 transition-opacity"
+                    style="background-color: #003793; color: white;"
+                  >
+                    {{ tag.name }}
+                  </span>
+                </template>
+                <span v-else class="px-3 py-1 text-xs font-semibold rounded-full" style="background-color: #e5e7eb; color: #6b7280;">
+                  Tidak ada kategori
                 </span>
               </div>
               <!-- Judul -->
@@ -153,14 +164,15 @@
                 {{ truncate(stripHtml(item.description), 100) }}
               </p>
               <!-- Meta -->
-              <div class="flex flex-wrap items-center gap-x-1.5 text-sm text-gray-400 mt-auto">
+              <div class="flex flex-wrap items-center gap-x-1.5 text-xs text-gray-400 mt-auto">
                 <span>{{ formatDate(item.date) }}</span>
+                <span>·</span>
                 <template v-if="item.contributors?.length > 0">
-                  <span>·</span>
                   <span v-for="(c, i) in item.contributors" :key="i">
                     {{ c }}<span v-if="i < item.contributors.length - 1">,</span>
                   </span>
                 </template>
+                <span v-else>IOM-ITB</span>
               </div>
             </a>
           </div>
@@ -194,7 +206,8 @@
               <span
                 v-for="tag in activities[0].tags"
                 :key="tag.id"
-                class="px-3 py-1 text-xs font-semibold rounded-full"
+                @click="goToTagSearch(tag.name)"
+                class="px-3 py-1 text-xs font-semibold rounded-full cursor-pointer hover:opacity-75 transition-opacity"
                 style="background-color: #003793; color: white;"
               >
                 {{ tag.name }}
@@ -270,9 +283,20 @@
               />
             </div>
             <!-- Tags -->
-            <div v-if="item.tags?.length > 0" class="flex flex-wrap gap-1.5 mb-2">
-              <span v-for="tag in item.tags" :key="tag.id" class="text-base text-gray-400">
-                {{ tag.name }}
+            <div class="flex flex-wrap gap-1.5 mb-2">
+              <template v-if="item.tags?.length > 0">
+                <span
+                  v-for="tag in item.tags"
+                  :key="tag.id"
+                  @click.prevent="goToTagSearch(tag.name)"
+                  class="px-3 py-1 text-xs font-semibold rounded-full cursor-pointer hover:opacity-75 transition-opacity"
+                  style="background-color: #003793; color: white;"
+                >
+                  {{ tag.name }}
+                </span>
+              </template>
+              <span v-else class="px-3 py-1 text-xs font-semibold rounded-full" style="background-color: #e5e7eb; color: #6b7280;">
+                Tidak ada kategori
               </span>
             </div>
             <!-- Judul -->
@@ -286,12 +310,13 @@
             <!-- Meta -->
             <div class="flex flex-wrap items-center gap-x-1.5 text-xs text-gray-400 mt-auto">
               <span>{{ formatDate(item.date) }}</span>
+              <span>·</span>
               <template v-if="item.contributors?.length > 0">
-                <span>·</span>
                 <span v-for="(c, i) in item.contributors" :key="i">
                   {{ c }}<span v-if="i < item.contributors.length - 1">,</span>
                 </span>
               </template>
+              <span v-else>IOM-ITB</span>
             </div>
           </a>
         </div>
@@ -317,7 +342,6 @@ export default {
       isLoading: true,
       notFound: false,
       currentSlide: 0,
-      search: '',
       searchTimer: null,
       search: this.$route.query.tag || '',
     };
@@ -400,9 +424,10 @@ export default {
       this.searchTimer = setTimeout(() => {}, 0); // search dilakukan di computed, debounce hanya untuk UX
     },
     goToTagSearch(tagName) {
-      this.$router.push({
-        path: '/kegiatan',
-        query: { tag: tagName }
+      this.search = tagName;
+      this.$nextTick(() => {
+        const el = document.getElementById('semua-kegiatan');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
       });
     },
     formatDate(dateString) {

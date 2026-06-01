@@ -15,8 +15,30 @@
           </h5>
         </a>
         <span class="text-[14px] font-[600] text-white">{{ formattedDate(v?.date) }}</span>
+
+        <!-- Tag chips -->
+        <div class="flex flex-wrap gap-1.5 mt-2">
+          <template v-if="v.tags?.length > 0">
+            <span
+              v-for="tag in v.tags"
+              :key="tag.id"
+              @click.prevent="handleTagClick(tag.name)"
+              class="px-2.5 py-1 text-xs font-semibold rounded-full cursor-pointer hover:opacity-75 transition-opacity"
+              style="background-color: white; color: #003793;"
+            >
+              {{ tag.name }}
+            </span>
+          </template>
+          <span v-else class="text-xs text-white opacity-60">Tidak ada kategori</span>
+        </div>
+
         <p class="mb-3 text-[14px] mt-2 text-white">
           {{ truncate(stripHtml(v?.description), 150) }}
+        </p>
+
+        <!-- Author fallback -->
+        <p class="text-xs text-white opacity-60 mb-1">
+          {{ v.contributors?.length > 0 ? v.contributors.join(', ') : 'IOM-ITB' }}
         </p>
       </div>
       <a
@@ -63,7 +85,14 @@ export default {
       if (!html) return "";
       return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
     },
-  }
+    handleTagClick(tagName) {
+      if (this.$route.path === '/kegiatan') {
+        this.$emit('tag-click', tagName);
+      } else {
+        this.$router.push({ path: '/kegiatan', query: { tag: tagName } });
+      }
+    },
+  },
 };
 </script>
 
