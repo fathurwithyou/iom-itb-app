@@ -40,10 +40,11 @@ export const syncPaymentStatus = async (orderId, options = {}) => {
   return lastResult;
 };
 
-export const cancelPayment = async (orderId) => {
+export const cancelPayment = async (orderId, options = {}) => {
   if (!orderId) return null;
 
-  const response = await ApiService.postJson("/payments/cancel", { orderId });
+  const publicToken = options.publicToken || options.orderStatusToken || options.trackingToken || null;
+  const response = await ApiService.postJson("/payments/cancel", { orderId, publicToken });
   const result = normalizeResponse(response);
 
   if (isTerminalPaymentStatus(result.paymentStatus) || isNotStartedPaymentSession(result.paymentSessionState)) {

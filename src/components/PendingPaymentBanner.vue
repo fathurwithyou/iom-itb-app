@@ -51,7 +51,7 @@
                   Lanjutkan
                 </button>
                 <button
-                  @click="dismiss(p.orderId)"
+                  @click="dismiss(p)"
                   :disabled="cancelingOrderId === p.orderId"
                   class="border border-[#D8E4FF] text-main/75 hover:bg-[#F3F7FF] hover:text-main disabled:opacity-50 text-[12px] font-[600] px-4 py-2 rounded-full transition"
                 >
@@ -117,7 +117,9 @@ export default {
       if (hours > 0) return `${hours} jam ${minutes} menit lagi`;
       return `${minutes} menit lagi`;
     },
-    async dismiss(orderId) {
+    async dismiss(payment) {
+      const orderId = payment?.orderId;
+      const publicToken = payment?.publicToken || payment?.orderStatusToken || payment?.trackingToken;
       const confirm = await Swal.fire({
         icon: 'warning',
         title: 'Batalkan pembayaran?',
@@ -132,7 +134,7 @@ export default {
 
       this.cancelingOrderId = orderId;
       try {
-        const result = await cancelPayment(orderId);
+        const result = await cancelPayment(orderId, { publicToken });
         if (isNotStartedPaymentSession(result?.paymentSessionState)) {
           await Swal.fire({
             icon: 'info',

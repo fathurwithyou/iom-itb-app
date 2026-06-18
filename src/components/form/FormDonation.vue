@@ -445,6 +445,7 @@ export default {
       const payload = (result && result.data) || result || {};
       const token = payload.token;
       const orderId = payload.orderId;
+      const publicToken = payload.publicToken || payload.orderStatusToken || payload.trackingToken;
       const grossAmount = Number(payload.grossAmount || this.donationAmountSummary.grossAmount || 0);
       if (!token) throw new Error("Snap token tidak tersedia");
 
@@ -456,6 +457,7 @@ export default {
           type: 'donation',
           amount: grossAmount,
           label: `Donasi — ${donationLabel}`,
+          publicToken,
         });
         window.dispatchEvent(new Event('iom:pending-updated'));
       }
