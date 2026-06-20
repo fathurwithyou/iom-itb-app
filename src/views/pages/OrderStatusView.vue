@@ -76,6 +76,38 @@
           </div>
         </div>
 
+        <div class="border-t border-gray-200 pt-5">
+          <div class="mb-4">
+            <h3 class="text-lg font-bold text-main">Riwayat Pesanan</h3>
+            <p class="text-sm text-gray-500">Perkembangan status pesanan Anda dari waktu ke waktu.</p>
+          </div>
+
+          <ol class="relative border-l-2 border-blue-100 ml-3 space-y-5">
+            <li
+              v-for="(item, index) in statusHistory"
+              :key="`${item.status}-${item.changedAt || index}`"
+              class="relative pl-6"
+            >
+              <span
+                class="absolute -left-[11px] top-0 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white"
+                :class="index === statusHistory.length - 1 ? 'bg-main shadow' : 'bg-blue-100'"
+              >
+                <span
+                  class="h-2 w-2 rounded-full"
+                  :class="index === statusHistory.length - 1 ? 'bg-white' : 'bg-main'"
+                ></span>
+              </span>
+              <div class="rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-3">
+                <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <p class="font-semibold text-main">{{ item.label || labelForStatus(item.status) }}</p>
+                  <p class="text-xs font-medium text-gray-500">{{ formatDateTime(item.changedAt) }}</p>
+                </div>
+                <p v-if="item.note" class="mt-1 text-sm text-gray-600">{{ item.note }}</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+
         <div class="bg-blue-50 border border-blue-100 rounded-md p-4 text-sm text-blue-900">
           <p>
             Konfirmasi pembayaran telah dikirim ke <strong>{{ transaction.email }}</strong>
@@ -103,6 +135,16 @@ const PAYMENT_STATUS_LABELS = {
   failed: "Gagal",
   expired: "Kadaluarsa",
   refunded: "Dikembalikan",
+};
+
+const ORDER_STATUS_LABELS = {
+  waiting: "Menunggu",
+  "on process": "Diproses",
+  "on delivery": "Dikirim",
+  arrived: "Tiba",
+  done: "Selesai",
+  canceled: "Dibatalkan",
+  denied: "Ditolak",
 };
 
 export default {
@@ -136,6 +178,19 @@ export default {
       if (s === "canceled" || s === "denied") return "bg-red-100 text-red-700";
       return "bg-yellow-100 text-yellow-700";
     },
+    statusHistory() {
+      const histories = this.transaction?.statusHistory;
+      if (Array.isArray(histories) && histories.length > 0) return histories;
+
+      if (!this.transaction?.status) return [];
+
+      return [{
+        status: this.transaction.status,
+        label: this.labelForStatus(this.transaction.status),
+        note: "Status terkini",
+        changedAt: this.transaction.updatedAt || this.transaction.createdAt,
+      }];
+    },
   },
   mounted() {
     this.fetch();
@@ -158,6 +213,21 @@ export default {
     formatIDR(value) {
       const n = Number(value || 0);
       return n.toLocaleString("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 });
+    },
+    labelForStatus(status) {
+      return ORDER_STATUS_LABELS[status] || status || "-";
+    },
+    formatDateTime(value) {
+      if (!value) return "-";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "-";
+      return date.toLocaleString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     },
   },
 };
