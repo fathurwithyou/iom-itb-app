@@ -74,7 +74,9 @@
               <template v-if="activity?.contributors?.length > 0">
                 <li v-for="(c, i) in activity.contributors" :key="i" class="text-sm text-gray-600 flex items-center gap-2">
                   <span class="w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0"/>
-                  {{ c }}
+                  <a :href="contributorUrl(c)" class="hover:text-main hover:underline">
+                    {{ c }}
+                  </a>
                 </li>
               </template>
               <li v-else class="text-sm text-gray-600 flex items-center gap-2">
@@ -123,21 +125,20 @@
         <div class="mt-16 border-t border-gray-100 pt-10">
           <h2 class="text-main font-[800] text-[24px] md:text-[32px] leading-tight mb-8">Kegiatan Lainnya</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <a
+            <article
               v-for="item in otherActivities"
               :key="item.id"
-              :href="getUrl(item.url)"
               class="group flex flex-col"
             >
               <!-- Thumbnail -->
-              <div class="w-full aspect-[16/9] bg-gray-100 rounded-xl overflow-hidden mb-3">
+              <a :href="getUrl(item.url)" class="w-full aspect-[16/9] bg-gray-100 rounded-xl overflow-hidden mb-3">
                 <img
                   v-if="item.image"
                   :src="item.image"
                   :alt="item.title"
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-              </div>
+              </a>
               <!-- Tags -->
               <div class="flex flex-wrap gap-1.5 mb-2">
                 <template v-if="item.tags?.length > 0">
@@ -156,9 +157,11 @@
                 </span>
               </div>
               <!-- Judul -->
-              <h3 class="font-[700] text-[18px] text-gray-900 leading-snug mb-2 group-hover:opacity-70 transition-opacity">
-                {{ truncate(item.title, 70) }}
-              </h3>
+              <a :href="getUrl(item.url)" class="group-hover:opacity-70 transition-opacity">
+                <h3 class="font-[700] text-[18px] text-gray-900 leading-snug mb-2">
+                  {{ truncate(item.title, 70) }}
+                </h3>
+              </a>
               <!-- Preview -->
               <p class="text-[14px] text-gray-400 leading-relaxed mb-2 line-clamp-2">
                 {{ truncate(stripHtml(item.description), 100) }}
@@ -168,13 +171,13 @@
                 <span>{{ formatDate(item.date) }}</span>
                 <span>·</span>
                 <template v-if="item.contributors?.length > 0">
-                  <span v-for="(c, i) in item.contributors" :key="i">
+                  <a v-for="(c, i) in item.contributors" :key="i" :href="contributorUrl(c)" class="hover:text-main hover:underline">
                     {{ c }}<span v-if="i < item.contributors.length - 1">,</span>
-                  </span>
+                  </a>
                 </template>
                 <span v-else>IOM-ITB</span>
               </div>
-            </a>
+            </article>
           </div>
         </div>
       </div>
@@ -182,12 +185,32 @@
       <!-- ===== LIST ACTIVITY ===== -->
       <div v-else class="bg-white px-[18px] md:px-[70px] pt-8 pb-[32px]">
 
+        <template v-if="isContributorPage">
+          <div class="mb-10 max-w-3xl">
+            <a
+              href="/kegiatan"
+              class="mb-5 inline-flex items-center gap-2 rounded-full border-2 px-4 py-2 text-[14px] font-medium transition-opacity hover:opacity-70"
+              style="border-color: #003793; color: #003793;"
+            >
+              <img :src="require('@/assets/icon/arrow-left.svg')" class="w-[16px]" style="filter: invert(19%) sepia(98%) saturate(1200%) hue-rotate(210deg) brightness(60%)"/>
+              Semua Kegiatan
+            </a>
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">Kontributor</p>
+            <h1 class="mt-2 text-main font-[800] text-[32px] md:text-[46px] leading-tight">
+              Tulisan oleh {{ contributorName }}
+            </h1>
+            <p class="mt-3 text-[15px] leading-relaxed text-gray-500">
+              Kumpulan kegiatan dan tulisan yang dipublikasikan dengan kontribusi {{ contributorName }}.
+            </p>
+          </div>
+        </template>
+
         <!-- Kegiatan Terbaru -->
-        <h2 class="text-main font-[800] text-[32px] md:text-[50px] leading-tight mb-10 md:mb-14">
+        <h2 v-if="!isContributorPage" class="text-main font-[800] text-[32px] md:text-[50px] leading-tight mb-10 md:mb-14">
           Kegiatan Terbaru
         </h2>
 
-        <div v-if="activities.length > 0" class="flex flex-col md:flex-row gap-8 md:gap-12 mb-16">
+        <div v-if="!isContributorPage && activities.length > 0" class="flex flex-col md:flex-row gap-8 md:gap-12 mb-16">
           <!-- Thumbnail kiri -->
           <img
             :src="activities[0]?.image"
@@ -219,7 +242,14 @@
               <span>{{ formatDate(activities[0]?.date) }}</span>
               <template v-if="activities[0]?.contributors?.length > 0">
                 <span>·</span>
-                <span>{{ activities[0].contributors.join(', ') }}</span>
+                <a
+                  v-for="(c, i) in activities[0].contributors"
+                  :key="i"
+                  :href="contributorUrl(c)"
+                  class="hover:text-main hover:underline"
+                >
+                  {{ c }}<span v-if="i < activities[0].contributors.length - 1">,</span>
+                </a>
               </template>
             </div>
 
@@ -247,10 +277,10 @@
 
         <div id="semua-kegiatan" class="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <h2 class="text-main font-[800] text-[32px] md:text-[40px] leading-tight">
-            Semua Kegiatan
+            {{ isContributorPage ? 'Daftar Tulisan' : 'Semua Kegiatan' }}
           </h2>
 
-          <form class="relative w-full md:max-w-[520px]" @submit.prevent="debouncedSearch">
+          <form v-if="!isContributorPage" class="relative w-full md:max-w-[520px]" @submit.prevent="debouncedSearch">
             <label for="activity-search" class="sr-only">Cari kegiatan</label>
             <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-main" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -279,21 +309,20 @@
 
         <!-- Grid cards -->
         <div v-if="filteredActivities.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <a
-            v-for="item in filteredActivities"
-            :key="item.id"
-            :href="getUrl(item.url)"
-            class="group flex flex-col"
-          >
-            <!-- Thumbnail -->
-            <div class="w-full aspect-[16/9] bg-gray-100 rounded-xl overflow-hidden mb-3">
-              <img
-                v-if="item.image"
-                :src="item.image"
-                :alt="item.title"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-            </div>
+            <article
+              v-for="item in filteredActivities"
+              :key="item.id"
+              class="group flex flex-col"
+            >
+              <!-- Thumbnail -->
+              <a :href="getUrl(item.url)" class="w-full aspect-[16/9] bg-gray-100 rounded-xl overflow-hidden mb-3">
+                <img
+                  v-if="item.image"
+                  :src="item.image"
+                  :alt="item.title"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              </a>
             <!-- Tags -->
             <div class="flex flex-wrap gap-1.5 mb-2">
               <template v-if="item.tags?.length > 0">
@@ -310,11 +339,13 @@
               <span v-else class="px-3 py-1 text-xs font-semibold rounded-full" style="background-color: #e5e7eb; color: #6b7280;">
                 Tidak ada kategori
               </span>
-            </div>
-            <!-- Judul -->
-            <h3 class="font-[700] text-[22px] text-gray-900 leading-snug mb-2 group-hover:opacity-70 transition-opacity">
-              {{ truncate(item.title, 70) }}
-            </h3>
+              </div>
+              <!-- Judul -->
+              <a :href="getUrl(item.url)" class="group-hover:opacity-70 transition-opacity">
+                <h3 class="font-[700] text-[22px] text-gray-900 leading-snug mb-2">
+                  {{ truncate(item.title, 70) }}
+                </h3>
+              </a>
             <!-- Preview -->
             <p class="text-[16px] text-gray-400 leading-relaxed mb-2 line-clamp-2">
               {{ truncate(stripHtml(item.description), 100) }}
@@ -324,16 +355,16 @@
               <span>{{ formatDate(item.date) }}</span>
               <span>·</span>
               <template v-if="item.contributors?.length > 0">
-                <span v-for="(c, i) in item.contributors" :key="i">
+                <a v-for="(c, i) in item.contributors" :key="i" :href="contributorUrl(c)" class="hover:text-main hover:underline">
                   {{ c }}<span v-if="i < item.contributors.length - 1">,</span>
-                </span>
+                </a>
               </template>
               <span v-else>IOM-ITB</span>
             </div>
-          </a>
+          </article>
         </div>
         <div v-else class="text-center py-16 text-gray-400 text-sm">
-          Tidak ada kegiatan yang ditemukan.
+          {{ isContributorPage ? `Belum ada tulisan dari ${contributorName}.` : 'Tidak ada kegiatan yang ditemukan.' }}
         </div>
       </div>
 
@@ -368,8 +399,14 @@ export default {
         ? this.$store.getters.detailActivity
         : this.$store.getters.activities?.[0];
     },
+    isContributorPage() {
+      return this.$route.name === "Contributor Activity";
+    },
+    contributorName() {
+      return this.$route.params.name ? String(this.$route.params.name) : "";
+    },
     thisPathHaveSlug() {
-      return this.$route.path.split("/").filter(Boolean).length > 1;
+      return this.$route.name === "Detail Activity";
     },
     allMedia() {
       if (!this.activity) return [];
@@ -383,8 +420,8 @@ export default {
       return media;
     },
     filteredActivities() {
-      const q = this.search.trim().toLowerCase();
-      const list = q ? this.activities : this.activities.slice(1); // skip featured only when not searching
+      const q = this.isContributorPage ? "" : this.search.trim().toLowerCase();
+      const list = this.isContributorPage || q ? this.activities : this.activities.slice(1); // skip featured only when not searching
       if (!q) return list;
       return list.filter(a => {
         const inTitle = a.title?.toLowerCase().includes(q);
@@ -404,7 +441,17 @@ export default {
   watch: {
     '$route.query': {
       handler() {
+        if (this.isContributorPage) return;
         this.applySearchFromRoute();
+      },
+      deep: true,
+    },
+    '$route.params': {
+      async handler() {
+        this.isLoading = true;
+        this.notFound = false;
+        await this.getData();
+        this.isLoading = false;
       },
       deep: true,
     },
@@ -412,7 +459,7 @@ export default {
   async mounted() {
     await this.getData();
     this.isLoading = false;
-    if (this.$route.query.tag || this.$route.query.q) {
+    if (!this.isContributorPage && (this.$route.query.tag || this.$route.query.q)) {
       this.applySearchFromRoute(true);
     }
   },
@@ -444,9 +491,22 @@ export default {
       if (nextQ === currentQ && nextTag === currentTag) return;
       this.$router.replace({ path: '/kegiatan', query }).catch(() => {});
     },
+    contributorUrl(name) {
+      return `/kegiatan/kontributor/${encodeURIComponent(name)}`;
+    },
     async getData() {
       try {
-        if (this.$route.params.slug) {
+        if (this.isContributorPage) {
+          await this.$store.dispatch(GET_ACTIVITIES, {
+            contributor: this.contributorName,
+            search: "",
+            limit: 100,
+            page: 1,
+          });
+          return;
+        }
+
+        if (this.thisPathHaveSlug) {
           await this.$store.dispatch(GET_DETAIL_ACTIVITY, { slug: this.$route.params.slug });
           if (!this.$store.getters.detailActivity) {
             this.notFound = true;
@@ -460,7 +520,7 @@ export default {
         });
       } catch (err) {
         console.error(err);
-        if (this.$route.params.slug) this.notFound = true;
+        if (this.thisPathHaveSlug) this.notFound = true;
       }
     },
     debouncedSearch() {

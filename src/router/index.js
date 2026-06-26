@@ -110,6 +110,12 @@ const routes = [
         meta: { haveAuthenticated: true },
       },
       {
+        path: "/kegiatan/kontributor/:name",
+        name: "Contributor Activity",
+        component: () => import("@/views/pages/ActivityView.vue"),
+        meta: { haveAuthenticated: true },
+      },
+      {
         path: "/kegiatan/:slug",
         name: "Detail Activity",
         component: () => import("@/views/pages/ActivityView.vue"),

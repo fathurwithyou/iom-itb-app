@@ -37,8 +37,18 @@
         </p>
 
         <!-- Author fallback -->
-        <p class="text-xs text-white opacity-60 mb-1">
-          {{ v.contributors?.length > 0 ? v.contributors.join(', ') : 'IOM-ITB' }}
+        <p class="text-xs text-white opacity-80 mb-1">
+          <template v-if="v.contributors?.length > 0">
+            <a
+              v-for="(c, index) in v.contributors"
+              :key="index"
+              :href="contributorUrl(c)"
+              class="hover:underline"
+            >
+              {{ c }}<span v-if="index < v.contributors.length - 1">,</span>
+            </a>
+          </template>
+          <span v-else>IOM-ITB</span>
         </p>
       </div>
       <a
@@ -66,8 +76,12 @@ export default {
       const allActivities = this.$store.getters.activities || [];
       const pathSegments = this.$route.path.split("/").filter(Boolean);
       const isKegiatanPath = pathSegments[0] === "kegiatan";
-      const slug = pathSegments[1] || null;
+      const isContributorPath = isKegiatanPath && pathSegments[1] === "kontributor";
+      const slug = isContributorPath ? null : pathSegments[1] || null;
 
+      if (isContributorPath) {
+        return allActivities;
+      }
       if (isKegiatanPath && !slug) {
         return allActivities.slice(1);
       }
@@ -81,6 +95,9 @@ export default {
     truncate,
     formattedDate,
     getUrl,
+    contributorUrl(name) {
+      return `/kegiatan/kontributor/${encodeURIComponent(name)}`;
+    },
     stripHtml(html) {
       if (!html) return "";
       return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
