@@ -105,7 +105,7 @@
           <div class="flex-1 min-w-0">
             <div
               v-if="activity?.description"
-              class="activity-content text-[14px] md:text-[16px] text-main mb-8"
+              class="activity-content mb-8"
               v-html="activity.description"
             />
 
@@ -120,7 +120,7 @@
         </div>
 
         <!-- Kegiatan Lainnya -->
-        <div class="mt-12">
+        <div class="mt-16 border-t border-gray-100 pt-10">
           <h2 class="text-main font-[800] text-[24px] md:text-[32px] leading-tight mb-8">Kegiatan Lainnya</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <a
@@ -432,9 +432,16 @@ export default {
     },
     formatDate(dateString) {
       if (!dateString) return "";
-      return new Date(dateString).toLocaleDateString("id-ID", {
-        day: "numeric", month: "long", year: "numeric",
-      });
+      const value = String(dateString);
+      const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
+      const date = dateOnly ? new Date(`${value}T12:00:00+07:00`) : new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+      return new Intl.DateTimeFormat("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        timeZone: "Asia/Jakarta",
+      }).format(date);
     },
     stripHtml(html) {
       if (!html) return "";
@@ -455,26 +462,45 @@ export default {
 </script>
 
 <style scoped>
-.activity-content :deep(p) { margin-bottom: 1rem; line-height: 1.7; }
+.activity-content {
+  max-width: 760px;
+  color: #1f2937;
+  font-size: 16px;
+  line-height: 1.75;
+}
+@media (min-width: 768px) {
+  .activity-content {
+    font-size: 17px;
+  }
+}
+.activity-content :deep(p) { margin-bottom: 1.1rem; }
 .activity-content :deep(h1),
 .activity-content :deep(h2),
-.activity-content :deep(h3) { font-weight: 700; margin-bottom: 0.75rem; margin-top: 1.5rem; }
-.activity-content :deep(h1) { font-size: 1.75rem; }
-.activity-content :deep(h2) { font-size: 1.5rem; }
-.activity-content :deep(h3) { font-size: 1.25rem; }
+.activity-content :deep(h3) {
+  color: #003793;
+  font-weight: 800;
+  line-height: 1.25;
+  margin-bottom: 0.8rem;
+  margin-top: 2rem;
+}
+.activity-content :deep(h1) { font-size: 2rem; }
+.activity-content :deep(h2) { font-size: 1.6rem; }
+.activity-content :deep(h3) { font-size: 1.3rem; }
 .activity-content :deep(ul),
 .activity-content :deep(ol) { padding-left: 1.5rem; margin-bottom: 1rem; }
 .activity-content :deep(ul) { list-style-type: disc; }
 .activity-content :deep(ol) { list-style-type: decimal; }
-.activity-content :deep(li) { margin-bottom: 0.25rem; }
+.activity-content :deep(li) { margin-bottom: 0.35rem; }
 .activity-content :deep(blockquote) {
-  border-left: 4px solid #003A6E;
-  padding-left: 1rem;
-  color: #666;
+  border-left: 4px solid #003793;
+  padding: 0.75rem 1rem;
+  color: #374151;
   font-style: italic;
-  margin: 1rem 0;
+  margin: 1.5rem 0;
+  background-color: #f8fafc;
+  border-radius: 0 8px 8px 0;
 }
-.activity-content :deep(a) { color: #003A6E; text-decoration: underline; cursor: pointer; }
+.activity-content :deep(a) { color: #003793; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .activity-content :deep(a:hover) { opacity: 0.8; }
 .activity-content :deep(strong) { font-weight: 700; }
 .activity-content :deep(em) { font-style: italic; }
@@ -482,20 +508,20 @@ export default {
   max-width: 100%;       
   height: auto;           
   border-radius: 8px;
-  display: inline-block;  
-  margin: 0.25rem;
+  display: block;  
+  margin: 1.5rem auto;
 }
 .activity-content :deep(img[style*="width"]) {
   height: auto !important;
 }
 .activity-content :deep(p img) {
-  display: inline-block;
+  display: block;
 }
 .activity-content :deep(div[data-youtube-video]) {
-  margin: 1.2rem auto;
+  margin: 1.75rem auto;
   border-radius: 10px;
   overflow: hidden;
-  max-width: 720px;
+  max-width: 760px;
 }
 .activity-content :deep(div[data-youtube-video] iframe),
 .activity-content :deep(iframe) {
