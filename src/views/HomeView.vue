@@ -25,6 +25,33 @@
 
   <div class="bg-white p-[16px] md:p-[24px]">
     <h2 class="text-main font-[800] text-[32px] md:text-[50px] text-center leading-tight md:leading-[65.1px] py-[16px]">Kegiatan</h2>
+    <form
+      class="mx-auto mb-6 flex w-full max-w-[720px] flex-col gap-3 sm:flex-row"
+      @submit.prevent="submitActivitySearch"
+    >
+      <label for="home-activity-search" class="sr-only">Cari kegiatan</label>
+      <div class="relative flex-1">
+        <svg class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-main" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input
+          id="home-activity-search"
+          v-model="activitySearch"
+          type="search"
+          placeholder="Cari kegiatan..."
+          class="h-[52px] w-full rounded-xl border-2 border-[#b8c7e3] bg-[#f8fbff] py-3.5 pl-12 pr-4 text-[15px] text-gray-800 shadow-sm transition focus:border-[#003793] focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100"
+        />
+      </div>
+      <button
+        type="submit"
+        class="inline-flex h-[52px] items-center justify-center gap-2 rounded-xl bg-main px-6 text-[15px] font-[700] text-white shadow-sm transition hover:opacity-85 focus:outline-none focus:ring-4 focus:ring-blue-100"
+      >
+        Cari
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+        </svg>
+      </button>
+    </form>
     <ActivitiesItem />
   </div>
 
@@ -91,12 +118,18 @@ export default {
     return {};
   },
   data() {
-    return {};
+    return {
+      activitySearch: "",
+    };
   },
   mounted(){
     this.getData()
   },
   methods: {
+    submitActivitySearch() {
+      const q = this.activitySearch.trim();
+      this.$router.push(q ? { path: "/kegiatan", query: { q } } : { path: "/kegiatan" });
+    },
     async getData() {
       try {
         await this.$store.dispatch(GET_ACTIVITIES, {

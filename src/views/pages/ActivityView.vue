@@ -245,24 +245,36 @@
           </div>
         </div>
 
-        <!-- Semua Kegiatan -->
-        <h2 id="semua-kegiatan" class="text-main font-[800] text-[32px] md:text-[40px] leading-tight mb-4">
-          Semua Kegiatan
-        </h2>
+        <div id="semua-kegiatan" class="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <h2 class="text-main font-[800] text-[32px] md:text-[40px] leading-tight">
+            Semua Kegiatan
+          </h2>
 
-        <!-- Searchbar di bawahnya, di kanan -->
-        <div class="flex justify-end mb-6">
-          <div class="relative w-[280px]">
-            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <form class="relative w-full md:max-w-[520px]" @submit.prevent="debouncedSearch">
+            <label for="activity-search" class="sr-only">Cari kegiatan</label>
+            <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-main" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
             <input
+              id="activity-search"
               v-model="search"
               @input="debouncedSearch"
-              placeholder="Cari judul, konten, atau tag..."
-              class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              type="search"
+              placeholder="Cari judul, konten, tag, atau kontributor..."
+              class="h-[52px] w-full rounded-xl border-2 border-[#b8c7e3] bg-[#f8fbff] py-3.5 pl-12 pr-12 text-[15px] text-gray-800 shadow-sm transition focus:border-[#003793] focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100"
             />
-          </div>
+            <button
+              v-if="search"
+              type="button"
+              aria-label="Hapus pencarian"
+              class="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+              @click="clearSearch"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </form>
         </div>
 
         <!-- Grid cards -->
@@ -338,12 +350,13 @@ import { getUrl, truncate } from "@/utils";
 export default {
   components: { Loading, NotFound },
   data() {
+    const queryValue = (value) => Array.isArray(value) ? value[0] : value;
     return {
       isLoading: true,
       notFound: false,
       currentSlide: 0,
       searchTimer: null,
-      search: this.$route.query.tag || '',
+      search: queryValue(this.$route.query.q) || queryValue(this.$route.query.tag) || '',
     };
   },
   computed: {
@@ -370,14 +383,15 @@ export default {
       return media;
     },
     filteredActivities() {
-      const list = this.activities.slice(1); // skip activities[0] yg sudah jadi featured
-      if (!this.search.trim()) return list;
       const q = this.search.trim().toLowerCase();
+      const list = q ? this.activities : this.activities.slice(1); // skip featured only when not searching
+      if (!q) return list;
       return list.filter(a => {
         const inTitle = a.title?.toLowerCase().includes(q);
         const inDesc = this.stripHtml(a.description)?.toLowerCase().includes(q);
         const inTags = a.tags?.some(t => t.name?.toLowerCase().includes(q));
-        return inTitle || inDesc || inTags;
+        const inContributors = a.contributors?.some(c => c?.toLowerCase().includes(q));
+        return inTitle || inDesc || inTags || inContributors;
       });
     },
     otherActivities() {
@@ -387,19 +401,49 @@ export default {
         .slice(0, 6);
     },
   },
+  watch: {
+    '$route.query': {
+      handler() {
+        this.applySearchFromRoute();
+      },
+      deep: true,
+    },
+  },
   async mounted() {
     await this.getData();
     this.isLoading = false;
-    if (this.$route.query.tag) {
-      this.$nextTick(() => {
-        const el = document.getElementById('semua-kegiatan');
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      });
+    if (this.$route.query.tag || this.$route.query.q) {
+      this.applySearchFromRoute(true);
     }
   },
   methods: {
     truncate,
     getUrl,
+    queryValue(value) {
+      return Array.isArray(value) ? value[0] : value;
+    },
+    routeSearchValue() {
+      return this.queryValue(this.$route.query.q) || this.queryValue(this.$route.query.tag) || '';
+    },
+    applySearchFromRoute(shouldScroll = false) {
+      const nextSearch = this.routeSearchValue();
+      if (nextSearch !== this.search) this.search = nextSearch;
+      if (shouldScroll && nextSearch) this.scrollToAllActivities();
+    },
+    scrollToAllActivities() {
+      this.$nextTick(() => {
+        const el = document.getElementById('semua-kegiatan');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      });
+    },
+    replaceActivityQuery(query) {
+      const nextQ = query.q || '';
+      const nextTag = query.tag || '';
+      const currentQ = this.queryValue(this.$route.query.q) || '';
+      const currentTag = this.queryValue(this.$route.query.tag) || '';
+      if (nextQ === currentQ && nextTag === currentTag) return;
+      this.$router.replace({ path: '/kegiatan', query }).catch(() => {});
+    },
     async getData() {
       try {
         if (this.$route.params.slug) {
@@ -421,14 +465,20 @@ export default {
     },
     debouncedSearch() {
       clearTimeout(this.searchTimer);
-      this.searchTimer = setTimeout(() => {}, 0); // search dilakukan di computed, debounce hanya untuk UX
+      this.searchTimer = setTimeout(() => {
+        const q = this.search.trim();
+        this.replaceActivityQuery(q ? { q } : {});
+      }, 300);
+    },
+    clearSearch() {
+      this.search = '';
+      clearTimeout(this.searchTimer);
+      this.replaceActivityQuery({});
     },
     goToTagSearch(tagName) {
       this.search = tagName;
-      this.$nextTick(() => {
-        const el = document.getElementById('semua-kegiatan');
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      });
+      this.replaceActivityQuery({ tag: tagName });
+      this.scrollToAllActivities();
     },
     formatDate(dateString) {
       if (!dateString) return "";
