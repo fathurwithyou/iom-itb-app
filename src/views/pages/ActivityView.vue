@@ -31,7 +31,7 @@
           <div class="flex-1 flex flex-col justify-center gap-6">
             <!-- Judul, tags, tanggal -->
             <div>
-              <h1 class="font-[800] text-[28px] md:text-[38px] leading-tight mb-4 text-main">
+              <h1 class="font-[800] text-[28px] md:text-[38px] leading-tight mb-4 text-main activity-card-copy">
                 {{ activity?.title }}
               </h1>
               <div v-if="activity?.tags?.length > 0" class="flex flex-wrap gap-2 mb-4">
@@ -104,20 +104,22 @@
           </div>
 
           <!-- Konten -->
-          <div class="flex-1 min-w-0">
+          <div class="flex-1 min-w-0 w-full">
             <div
               v-if="activity?.description"
-              class="activity-content mb-8"
+              class="activity-content mx-auto mb-8"
               v-html="activity.description"
             />
 
-            <a
-              href="/kegiatan"
-              class="inline-flex items-center gap-2 px-4 py-2 text-[16px] font-medium text-white bg-main rounded-full hover:opacity-80 transition-opacity"
-            >
-              <img :src="require('@/assets/icon/arrow-left.svg')" class="w-[18px]"/>
-              Kembali
-            </a>
+            <div class="article-actions mx-auto">
+              <a
+                href="/kegiatan"
+                class="inline-flex items-center gap-2 px-4 py-2 text-[16px] font-medium text-white bg-main rounded-full hover:opacity-80 transition-opacity"
+              >
+                <img :src="require('@/assets/icon/arrow-left.svg')" class="w-[18px]"/>
+                Kembali
+              </a>
+            </div>
           </div>
         </div>
 
@@ -158,12 +160,12 @@
               </div>
               <!-- Judul -->
               <a :href="getUrl(item.url)" class="group-hover:opacity-70 transition-opacity">
-                <h3 class="font-[700] text-[18px] text-gray-900 leading-snug mb-2">
+                <h3 class="font-[700] text-[18px] text-gray-900 leading-snug mb-2 activity-card-copy">
                   {{ truncate(item.title, 70) }}
                 </h3>
               </a>
               <!-- Preview -->
-              <p class="text-[14px] text-gray-400 leading-relaxed mb-2 line-clamp-2">
+              <p class="text-[14px] text-gray-400 leading-relaxed mb-2 line-clamp-2 activity-card-copy">
                 {{ truncate(stripHtml(item.description), 100) }}
               </p>
               <!-- Meta -->
@@ -220,7 +222,7 @@
           <!-- Konten kanan -->
           <div class="flex-1 flex flex-col justify-center">
             <!-- Judul -->
-            <h4 class="text-[24px] md:text-[32px] text-main font-[800] leading-tight mb-3">
+            <h4 class="text-[24px] md:text-[32px] text-main font-[800] leading-tight mb-3 activity-card-copy">
               {{ activities[0]?.title }}
             </h4>
 
@@ -253,7 +255,7 @@
               </template>
             </div>
 
-            <p class="font-[500] text-[14px] md:text-[16px] text-gray-500 mb-6 line-clamp-4">
+            <p class="font-[500] text-[14px] md:text-[16px] text-gray-500 mb-6 line-clamp-4 activity-card-copy">
               {{ truncate(stripHtml(activities[0]?.description), 300) }}
             </p>
             <a
@@ -342,12 +344,12 @@
               </div>
               <!-- Judul -->
               <a :href="getUrl(item.url)" class="group-hover:opacity-70 transition-opacity">
-                <h3 class="font-[700] text-[22px] text-gray-900 leading-snug mb-2">
+                <h3 class="font-[700] text-[22px] text-gray-900 leading-snug mb-2 activity-card-copy">
                   {{ truncate(item.title, 70) }}
                 </h3>
               </a>
             <!-- Preview -->
-            <p class="text-[16px] text-gray-400 leading-relaxed mb-2 line-clamp-2">
+            <p class="text-[16px] text-gray-400 leading-relaxed mb-2 line-clamp-2 activity-card-copy">
               {{ truncate(stripHtml(item.description), 100) }}
             </p>
             <!-- Meta -->
@@ -574,14 +576,30 @@ export default {
 <style scoped>
 .activity-content {
   max-width: 760px;
+  width: 100%;
   color: #1f2937;
   font-size: 16px;
   line-height: 1.75;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.article-actions {
+  max-width: 760px;
+  width: 100%;
+}
+.activity-card-copy {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 @media (min-width: 768px) {
   .activity-content {
     font-size: 17px;
   }
+}
+.activity-content :deep(*) {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .activity-content :deep(p) { margin-bottom: 1.1rem; }
 .activity-content :deep(h1),

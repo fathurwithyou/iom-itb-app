@@ -10,7 +10,7 @@
       </a>
       <div class="p-5">
         <a :href="getUrl(v?.url)">
-          <h5 class="text-xl md:text-2xl font-bold tracking-tight text-white">
+          <h5 class="text-xl md:text-2xl font-bold tracking-tight text-white activity-card-copy">
             {{ truncate(v.title, 40) }}
           </h5>
         </a>
@@ -32,12 +32,12 @@
           <span v-else class="text-xs text-white opacity-60">Tidak ada kategori</span>
         </div>
 
-        <p class="mb-3 text-[14px] mt-2 text-white">
+        <p class="mb-3 text-[14px] mt-2 text-white activity-card-copy">
           {{ truncate(stripHtml(v?.description), 150) }}
         </p>
 
         <!-- Author fallback -->
-        <p class="text-xs text-white opacity-80 mb-1">
+        <p class="text-xs text-white opacity-80 mb-1 activity-card-copy">
           <template v-if="v.contributors?.length > 0">
             <a
               v-for="(c, index) in v.contributors"
@@ -116,5 +116,9 @@ export default {
 <style scoped>
 .blue {
   border-color: #003A6E;
+}
+.activity-card-copy {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 </style>
