@@ -19,12 +19,61 @@ const getters = {
     },
 };
 
+const getActivitiesFromResponse = (data) => {
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data?.data?.data)) return data.data.data;
+    return [];
+};
+
+const getPaginationFromResponse = (data) => {
+    return data?.pagination || data?.data?.pagination || {};
+};
+
 const actions = {
     [GET_ACTIVITIES](context, params) {
         return new Promise((resolve, reject) => {
-            ApiService.get("/activities", params)
-                .then(response => {
-                    const { data } = response;
+            const { all, ...query } = params || {};
+
+            if (!all) {
+                ApiService.get("/activities", query)
+                    .then(response => {
+                        const { data } = response;
+                        context.commit(SET_ACTIVITIES, data);
+                        resolve(data);
+                    })
+                    .catch(err => {
+                        console.error("Error fetching activities:", err);
+                        reject(err);
+                    });
+                return;
+            }
+
+            const firstPage = Number(query.page) || 1;
+            const pageLimit = Number(query.limit) || 50;
+
+            ApiService.get("/activities", { ...query, page: firstPage, limit: pageLimit })
+                .then(async response => {
+                    const firstData = response.data;
+                    const firstPagination = getPaginationFromResponse(firstData);
+                    const totalPages = Number(firstPagination.totalPages) || 1;
+                    const allActivities = [...getActivitiesFromResponse(firstData)];
+
+                    for (let page = firstPage + 1; page <= totalPages; page++) {
+                        const nextResponse = await ApiService.get("/activities", { ...query, page, limit: pageLimit });
+                        allActivities.push(...getActivitiesFromResponse(nextResponse.data));
+                    }
+
+                    const data = {
+                        data: allActivities,
+                        pagination: {
+                            ...firstPagination,
+                            currentPage: firstPage,
+                            start: allActivities.length > 0 ? 1 : 0,
+                            end: allActivities.length,
+                            totalEntries: firstPagination.totalEntries || allActivities.length,
+                        },
+                    };
+
                     context.commit(SET_ACTIVITIES, data);
                     resolve(data);
                 })

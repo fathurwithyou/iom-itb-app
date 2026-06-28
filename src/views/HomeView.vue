@@ -134,8 +134,9 @@ export default {
       try {
         await this.$store.dispatch(GET_ACTIVITIES, {
           search: "",
-          limit: 1000,
+          limit: 50,
           page: 1,
+          all: true,
         });
       } catch (err) {
         console.error(err);

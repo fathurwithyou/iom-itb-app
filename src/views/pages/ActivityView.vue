@@ -423,7 +423,7 @@ export default {
     },
     filteredActivities() {
       const q = this.isContributorPage ? "" : this.search.trim().toLowerCase();
-      const list = this.isContributorPage || q ? this.activities : this.activities.slice(1); // skip featured only when not searching
+      const list = this.activities;
       if (!q) return list;
       return list.filter(a => {
         const inTitle = a.title?.toLowerCase().includes(q);
@@ -502,8 +502,9 @@ export default {
           await this.$store.dispatch(GET_ACTIVITIES, {
             contributor: this.contributorName,
             search: "",
-            limit: 100,
+            limit: 50,
             page: 1,
+            all: true,
           });
           return;
         }
@@ -517,8 +518,9 @@ export default {
         }
         await this.$store.dispatch(GET_ACTIVITIES, {
           search: "",
-          limit: 100,
+          limit: 50,
           page: 1,
+          all: true,
         });
       } catch (err) {
         console.error(err);
